@@ -23,7 +23,7 @@ providers:
 certificatesResolvers:
   cloudflare:
     acme:
-      email: penkinv@gmail.com
+      email: acme@penk.in
       storage: acme.json
       dnsChallenge:
         provider: cloudflare
