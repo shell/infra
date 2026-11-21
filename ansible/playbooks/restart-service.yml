@@ -1,0 +1,30 @@
+---
+# Restart Docker Compose services
+#
+# Usage:
+#   Restart all on host:    ansible-playbook playbooks/restart-service.yml -l servarr
+#   Restart one service:    ansible-playbook playbooks/restart-service.yml -l servarr -e service=sonarr
+
+- name: Restart Docker services
+  hosts: docker_hosts
+  become: no
+  vars:
+    base_path: "/home/{{ ansible_user }}"
+
+  tasks:
+    - name: Set services to restart
+      ansible.builtin.set_fact:
+        services_to_restart: "{{ [service] if service is defined else docker_compose_dirs }}"
+
+    - name: Restart services
+      ansible.builtin.shell: |
+        cd "{{ base_path }}/{{ item }}"
+        docker compose restart
+      loop: "{{ services_to_restart }}"
+      register: restart_result
+
+    - name: Show restart results
+      ansible.builtin.debug:
+        msg: "{{ item.stdout_lines }}"
+      loop: "{{ restart_result.results }}"
+      when: item.stdout_lines is defined

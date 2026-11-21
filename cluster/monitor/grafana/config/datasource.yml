@@ -1,0 +1,40 @@
+apiVersion: 1
+
+# Deletes any pre-existing "Prometheus" datasource before recreating it below.
+# Needed because older deploys provisioned this without a fixed uid, so Grafana
+# auto-generated one - without this, the uid we pin below conflicts with the
+# one already in data/grafana.db and Grafana refuses to start.
+deleteDatasources:
+- name: Prometheus
+  orgId: 1
+
+datasources:
+- name: Prometheus
+  uid: prometheus
+  type: prometheus
+  url: http://prometheus:9090
+  isDefault: true
+  access: proxy
+  editable: true
+
+- name: InfluxDB (Proxmox)
+  uid: influxdb-proxmox
+  type: influxdb
+  url: http://influxdb:8086
+  access: proxy
+  # Read-only token for the proxmox bucket; not editable so the UI can't swap it
+  editable: false
+  jsonData:
+    version: Flux
+    organization: homelab
+    defaultBucket: proxmox
+  secureJsonData:
+    token: $INFLUXDB_TOKEN
+
+- name: dell-optiplex (k8s)
+  uid: prometheus-k8s
+  type: prometheus
+  url: http://192.168.10.241:9090
+  isDefault: false
+  access: proxy
+  editable: true

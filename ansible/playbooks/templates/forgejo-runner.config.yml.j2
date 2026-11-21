@@ -1,0 +1,32 @@
+# Managed by ansible/playbooks/forgejo-runner.yml — do not edit on the host.
+log:
+  level: info
+  job_level: info
+
+runner:
+  capacity: 1
+  timeout: 3h
+  shutdown_timeout: 5m
+  labels:
+    # Jobs run directly on this VM as {{ ansible_user }}: SOPS age key, SSH to all hosts
+    - self-hosted:host
+    # Isolated containers, for validation and future software builds
+    - docker:docker://node:26-trixie
+
+cache:
+  enabled: true
+
+container:
+  network: ""
+  privileged: false
+  docker_host: "-"
+
+host:
+  workdir_parent: {{ forgejo_runner_home }}/work
+
+server:
+  connections:
+    forgejo:
+      url: {{ forgejo_url }}
+      uuid: {{ forgejo_runner_uuid }}
+      token: {{ forgejo_runner_secret }}

@@ -1,0 +1,22 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: metallb
+  namespace: metallb-system
+spec:
+  interval: 1h
+  releaseName: metallb
+  targetNamespace: metallb-system
+  chart:
+    spec:
+      chart: metallb
+      version: "0.16.1"
+      sourceRef:
+        kind: HelmRepository
+        name: metallb
+        namespace: metallb-system
+  values:
+    # Pure L2 mode — no BGP-capable router at home, don't need the frr-k8s
+    # BGP backend the chart enables by default.
+    frrk8s:
+      enabled: false

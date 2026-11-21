@@ -1,0 +1,21 @@
+# See https://github.com/prometheus/alertmanager/pull/2827
+# https://prometheus.io/docs/alerting/latest/configuration/#telegram_config
+route:
+  group_by: ['alertname']
+  group_wait: 1m
+  group_interval: 5m
+  repeat_interval: 1h
+  receiver: 'telegram'
+
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+receivers:
+  - name: 'telegram'
+    telegram_configs:
+    - api_url: https://api.telegram.org
+      bot_token: '__TELEGRAM_BOT_TOKEN__'
+      chat_id: __TELEGRAM_CHAT_ID__
+      parse_mode: HTML
+      # Layout lives in templates/telegram.tmpl
+      message: '{{ template "telegram.message" . }}'

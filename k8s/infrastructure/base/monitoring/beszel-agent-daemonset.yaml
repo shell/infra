@@ -1,0 +1,99 @@
+# Beszel agent on every node. Connects out to the hub on monitor over
+# WebSocket with the universal token (auto-registers each node as a system,
+# named after the node); the agent's SSH listener is disabled.
+#
+# Needs the beszel-agent Secret (KEY, TOKEN) from the cluster overlay.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: beszel-agent
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: beszel-agent
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: beszel-agent
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: beszel-agent
+    spec:
+      # Host network: report the node's interfaces/traffic, not the pod's
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: beszel-agent
+          # -alpine variant ships smartctl (the default image is scratch)
+          image: henrygd/beszel-agent:0.21.2-alpine
+          # Skip Longhorn's iSCSI volumes (sdX letters vary, EXCLUDE_SMART
+          # only takes exact paths). A privileged container only gets the
+          # host devices present at start, so the list stays accurate for
+          # the pod's lifetime. $$ escapes Kubernetes' $(VAR) expansion.
+          command:
+            - /bin/sh
+            - -c
+            - |
+              ex=""
+              for b in /sys/block/sd*; do
+                [ -e "$b" ] || continue
+                case "$$(readlink -f "$b")" in
+                  */session*) ex="$${ex:+$$ex,}/dev/$${b##*/}" ;;
+                esac
+              done
+              export EXCLUDE_SMART="$ex"
+              echo "EXCLUDE_SMART=$${EXCLUDE_SMART:-<none>}"
+              exec /agent
+          env:
+            - name: HUB_URL
+              value: http://192.168.10.230:8090
+            - name: DISABLE_SSH
+              value: "true"
+            - name: SYSTEM_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: KEY
+              valueFrom:
+                secretKeyRef:
+                  name: beszel-agent
+                  key: KEY
+            - name: TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: beszel-agent
+                  key: TOKEN
+          livenessProbe:
+            exec:
+              command: ["/agent", "health"]
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            timeoutSeconds: 10
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          # S.M.A.R.T. needs raw access to the disks (SYS_RAWIO for SATA,
+          # SYS_ADMIN for NVMe) and Kubernetes can only pass host block
+          # devices into a pod via privileged mode.
+          securityContext:
+            privileged: true
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            # Fingerprint = the node's identity in the hub; keep it across
+            # pod restarts so the hub doesn't register duplicates
+            - name: data
+              mountPath: /var/lib/beszel-agent
+      volumes:
+        - name: data
+          hostPath:
+            path: /var/lib/beszel-agent
+            type: DirectoryOrCreate

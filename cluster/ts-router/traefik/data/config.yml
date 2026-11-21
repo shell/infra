@@ -1,0 +1,543 @@
+http:
+  # ServersTransports for backends with self-signed certificates
+  serversTransports:
+    insecure-backend:
+      insecureSkipVerify: true
+
+  routers:
+    # ======== Dashboard ========
+    homarr:
+      entryPoints:
+        - "https"
+      rule: "Host(`home.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+      tls: {}
+      service: homarr
+
+    # ======== Authelia ========
+    authelia:
+      entryPoints: ["https"]
+      rule: "Host(`auth.sf.penk.in`)"
+      middlewares: [default-headers, https-redirectscheme]
+      tls: {}
+      service: authelia
+
+    # ======== Traefik dashboard ========
+    # Also the ONLY router that requests the sf.penk.in + *.sf.penk.in wildcard
+    # certificate. Every other router uses `tls: {}` and is served that stored
+    # certificate. Remove this router and the wildcard stops renewing.
+    traefik-dashboard:
+      entryPoints: ["https"]
+      rule: "Host(`traefik.sf.penk.in`)"
+      middlewares: [default-headers, https-redirectscheme, authelia]
+      tls:
+        certResolver: cloudflare
+        domains:
+          - main: "sf.penk.in"
+            sans:
+              - "*.sf.penk.in"
+      service: api@internal
+
+    # ======== Machines infrastructure ========
+    pihole: # Main PiHole instance on NUC
+      entryPoints:
+        - "https"
+      rule: "Host(`pihole.sf.penk.in`)"
+      middlewares:
+        - redirect-pihole-root
+        - default-headers
+        - https-redirectscheme
+        - addprefix-pihole
+      tls: {}
+      service: pihole
+    pihole2: # PiHole on Pi Zero W
+      entryPoints:
+        - "https"
+      rule: "Host(`pihole2.sf.penk.in`)"
+      middlewares:
+        - redirect-pihole-root
+        - default-headers
+        # - addprefix-pihole
+        - https-redirectscheme
+      tls: {}
+      service: pihole2
+    proxmox_nuc: # NUC 10i7
+      entryPoints:
+        - "https"
+      rule: "Host(`nuc.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+      tls: {}
+      service: proxmox_nuc
+    pbs_nuc: # Proxmox Backup Server (VM 106 on NUC)
+      entryPoints:
+        - "https"
+      rule: "Host(`nuc-backup.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+      tls: {}
+      service: pbs_nuc
+
+    # ======== Dev ========
+    forgejo: # Git + Actions CI on the runner VM (no Authelia: breaks git over HTTPS)
+      entryPoints:
+        - "https"
+      rule: "Host(`git.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+      tls: {}
+      service: forgejo
+
+    # ======== Monitoring ========
+    prometheus:
+      entryPoints:
+        - "https"
+      rule: "Host(`prometheus.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+        - authelia
+      tls: {}
+      service: prometheus
+    alertmanager:
+      entryPoints:
+        - "https"
+      rule: "Host(`alertmanager.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+        - authelia
+      tls: {}
+      service: alertmanager
+    grafana:
+      entryPoints:
+        - "https"
+      rule: "Host(`grafana.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+        - authelia
+      tls: {}
+      service: grafana
+    influxdb:
+      entryPoints:
+        - "https"
+      rule: "Host(`influxdb.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+        - authelia
+      tls: {}
+      service: influxdb
+    uptimekuma:
+      entryPoints:
+        - "https"
+      rule: "Host(`uptime.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+      tls: {}
+      service: uptimekuma
+
+    # ======== Media ========
+    jellyfin:
+      entryPoints:
+        - "https"
+      rule: "Host(`jellyfin.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+      tls: {}
+      service: jellyfin
+    seerr:
+      entryPoints:
+        - "https"
+      rule: "Host(`seerr.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+      tls: {}
+      service: seerr
+
+    audiobookshelf:
+      entryPoints:
+        - "https"
+      rule: "Host(`audiobook.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+      tls: {}
+      service: audiobookshelf
+
+    # ======== Downloaders ========
+    qbittorrent:
+      entryPoints:
+        - "https"
+      rule: "Host(`qb.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+      tls: {}
+      service: qbittorrent
+
+    sabnzbd:
+      entryPoints:
+        - "https"
+      rule: "Host(`nzb.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+        - authelia
+      tls: {}
+      service: sabnzbd
+    bazarr:
+      entryPoints:
+        - "https"
+      rule: "Host(`bazarr.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+        - authelia
+      tls: {}
+      service: bazarr
+
+    # ======== Misc ========
+    tubearchivist:
+      entryPoints:
+        - "https"
+      rule: "Host(`tube.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+      tls: {}
+      service: tubearchivist
+    stirling-pdf:
+      entryPoints:
+        - "https"
+      rule: "Host(`pdf.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+        - authelia
+      tls: {}
+      service: k8s-traefik
+    immich:
+      entryPoints:
+        - "https"
+      rule: "Host(`photo.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+      tls: {}
+      service: immich
+    beszel:
+      entryPoints:
+        - "https"
+      rule: "Host(`beszel.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+      tls: {}
+      service: beszel
+    paperless-ngx:
+      entryPoints:
+        - "https"
+      rule: "Host(`paperless.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+      tls: {}
+      service: k8s-traefik
+    paperless-ai:
+      entryPoints:
+        - "https"
+      rule: "Host(`paperless-ai.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+        - authelia
+      tls: {}
+      service: k8s-traefik
+    homeassistant:
+      entryPoints:
+        - "https"
+      rule: "Host(`ha.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+      tls: {}
+      service: homeassistant
+    openspeedtest:
+      entryPoints:
+        - "https"
+      rule: "Host(`speedtest.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+      tls: {}
+      service: openspeedtest
+    openspeedtest-k8s:
+      entryPoints:
+        - "https"
+      rule: "Host(`speedtest8.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+      tls: {}
+      service: k8s-traefik
+    jetkvm-nuc:
+      entryPoints:
+        - "https"
+      rule: "Host(`jetkvm-nuc.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+        - authelia
+      tls: {}
+      service: jetkvm-nuc
+
+    # ======== *Arr stack ========
+    sonarr:
+      entryPoints:
+        - "https"
+      rule: "Host(`sonarr.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+        - authelia
+      tls: {}
+      service: sonarr
+    radarr:
+      entryPoints:
+        - "https"
+      rule: "Host(`radarr.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+        - authelia
+      tls: {}
+      service: radarr
+    prowlarr:
+      entryPoints:
+        - "https"
+      rule: "Host(`prowlarr.sf.penk.in`)"
+      middlewares:
+        - default-headers
+        - https-redirectscheme
+        - authelia
+      tls: {}
+      service: prowlarr
+  services:
+    authelia:
+      loadBalancer:
+        servers:
+          - url: "http://authelia:9091"
+        passHostHeader: true
+    proxmox_nuc:
+      loadBalancer:
+        servers:
+          - url: "https://192.168.10.120:8006"
+        passHostHeader: true
+        serversTransport: insecure-backend@file
+    forgejo:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.252:3000"
+        passHostHeader: true
+    pbs_nuc:
+      loadBalancer:
+        servers:
+          - url: "https://192.168.10.150:8007"
+        passHostHeader: true
+        serversTransport: insecure-backend@file
+    homarr:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.141:7576"
+        passHostHeader: true
+    prometheus:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.230:9090"
+        passHostHeader: true
+    alertmanager:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.230:9093"
+        passHostHeader: true
+    grafana:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.230:3000"
+        passHostHeader: true
+    influxdb:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.230:8086"
+        passHostHeader: true
+    pihole:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.198"
+        passHostHeader: true
+    pihole2:
+      loadBalancer:
+        servers:
+          - url: "https://192.168.10.202:443"
+        passHostHeader: true
+        serversTransport: insecure-backend@file
+    uptimekuma:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.230:3001"
+        passHostHeader: true
+    jellyfin:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.142:8096"
+        passHostHeader: true
+    seerr:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.142:5055"
+        passHostHeader: true
+    qbittorrent:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.142:8090"
+        passHostHeader: true
+    tubearchivist:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.142:8095"
+        passHostHeader: true
+    sonarr:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.142:8989"
+        passHostHeader: true
+    radarr:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.142:7878"
+        passHostHeader: true
+    prowlarr:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.142:9696"
+        passHostHeader: true
+    sabnzbd:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.142:8080"
+        passHostHeader: true
+    bazarr:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.142:6767"
+        passHostHeader: true
+    audiobookshelf:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.142:13378"
+        passHostHeader: true
+    immich:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.142:2283"
+        passHostHeader: true
+    beszel:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.230:8090"
+        passHostHeader: true
+    openspeedtest: # container on this host, via ts-router-net
+      loadBalancer:
+        servers:
+          - url: "http://openspeedtest:3000"
+        passHostHeader: true
+    # Cluster Traefik (MetalLB IP); routes by Host to k8s Ingresses
+    k8s-traefik:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.240"
+        passHostHeader: true
+    homeassistant:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.186:8123"
+        passHostHeader: true
+    jetkvm-nuc:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.10.177"
+        passHostHeader: true
+  middlewares:
+    https-redirectscheme:
+      redirectScheme:
+        scheme: https
+        permanent: true
+    addprefix-pihole:
+      addPrefix:
+        prefix: "/admin"
+    redirectregex-pihole:
+      redirectRegex:
+        regex: "/admin/(.*)"
+        replacement: /
+    redirect-pihole-root:
+      redirectRegex:
+        # redirectRegex matches the full request URL (scheme://host/path), not just the path
+        regex: "^(https?://[^/]+)/$"
+        replacement: "${1}/admin/"
+        permanent: false
+    authelia:
+      forwardAuth:
+        address: http://authelia:9091/api/authz/forward-auth
+        trustForwardHeader: true
+        authResponseHeaders:
+          - Remote-User
+          - Remote-Groups
+          - Remote-Name
+          - Remote-Email
+
+    default-headers:
+      headers:
+        frameDeny: true
+        browserXssFilter: true
+        contentTypeNosniff: true
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 15552000
+        customFrameOptionsValue: SAMEORIGIN
+        customRequestHeaders:
+          X-Forwarded-Proto: https
+
+    idrac:
+      headers:
+        frameDeny: true
+        browserXssFilter: true
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsSeconds: 15552000
+        customFrameOptionsValue: SAMEORIGIN
+        customRequestHeaders:
+          X-Forwarded-Proto: https
+
+    default-whitelist:
+      ipAllowList:
+        sourceRange:
+          - "10.0.0.0/8"
+          - "192.168.0.0/16"
+          - "172.16.0.0/12"
+
+    secured:
+      chain:
+        middlewares:
+          - default-whitelist
+          - default-headers

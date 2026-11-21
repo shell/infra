@@ -1,0 +1,15 @@
+---
+# Run all safe/scheduled maintenance playbooks
+#
+# Usage:
+#   ansible-playbook playbooks/maintenance-all.yml
+#   ansible-playbook playbooks/maintenance-all.yml -e notify_telegram=true
+
+- name: Docker cleanup
+  ansible.builtin.import_playbook: docker-cleanup.yml
+
+- name: Host cleanup
+  ansible.builtin.import_playbook: host-cleanup.yml
+
+- name: Proxmox health checks
+  ansible.builtin.import_playbook: proxmox-health.yml

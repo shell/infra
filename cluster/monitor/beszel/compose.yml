@@ -1,0 +1,21 @@
+# Beszel hub. The local agent is deployed by ansible/playbooks/monitoring.yml
+services:
+  beszel:
+    # Keep in step with beszel_agent_version (group_vars/monitored.yml)
+    image: henrygd/beszel:0.21.2
+    container_name: beszel
+    restart: unless-stopped
+    ports:
+      - 8090:8090
+    environment:
+      - APP_URL=https://beszel.sf.penk.in
+      - HEARTBEAT_URL=${HEARTBEAT_URL}
+    volumes:
+      - /mnt/data/beszel_data:/beszel_data
+      - ./beszel_socket:/beszel_socket
+    healthcheck:
+      # The URL is relative to the container, not the host
+      test: ['CMD', '/beszel', 'health', '--url', 'http://localhost:8090']
+      start_period: 5s # Check 5 seconds after the container starts
+      interval: 120s # Then check every 120 seconds after that
+

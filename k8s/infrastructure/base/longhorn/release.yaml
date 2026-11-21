@@ -1,0 +1,42 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: longhorn
+  namespace: longhorn-system
+spec:
+  interval: 1h
+  releaseName: longhorn           # must match the existing release name for Flux to adopt it
+  targetNamespace: longhorn-system
+  chart:
+    spec:
+      chart: longhorn
+      version: "1.12.0"
+      sourceRef:
+        kind: HelmRepository
+        name: longhorn
+        namespace: longhorn-system
+  values:
+    ingress:
+      enabled: true
+      ingressClassName: traefik
+      host: longhorn.k8s.home
+    defaultSettings:
+      backupTarget: s3://xiky-homelab-backup@s3.us-west-001.backblazeb2.com/
+      backupTargetCredentialSecret: longhorn-backup-secret
+      defaultDataPath: /var/mnt/longhorn
+      defaultReplicaCount: 1
+      removeSnapshotsDuringFilesystemTrim: true
+    persistence:
+      defaultClassReplicaCount: 2
+    longhornDriver:
+      tolerations:
+        - key: workload
+          operator: Exists
+          effect: NoSchedule
+    longhornManager:
+      serviceAnnotations:
+        prometheus.io/scrape: "true"
+      tolerations:
+        - key: workload
+          operator: Exists
+          effect: NoSchedule

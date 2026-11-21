@@ -1,0 +1,7 @@
+---
+# Deploy one agent: run agents/<monitoring_agent>/main.yml.
+# An agent file usually just calls a Galaxy collection role (pinned in
+# ansible/requirements.yml) with values from group_vars/monitored.yml.
+
+- name: "{{ monitoring_agent }} | Deploy"
+  ansible.builtin.include_tasks: "{{ role_path }}/agents/{{ monitoring_agent }}/main.yml"

@@ -1,0 +1,52 @@
+---
+# Variables for all VPS hosts (public-facing Ubuntu 24.04)
+
+# SSH hardening
+vps_ssh_port: 22922
+vps_ssh_max_auth_tries: 3
+vps_ssh_login_grace_time: 20
+vps_ssh_pubkey_file: "~/.ssh/id_ed25519.pub"
+
+# Fail2ban
+vps_fail2ban_backend: systemd
+vps_fail2ban_bantime: 1h
+vps_fail2ban_findtime: 5m
+vps_fail2ban_maxretry: 5
+vps_fail2ban_ignoreip: "127.0.0.1/8 ::1"
+
+# UFW default ports
+vps_ufw_default_ports:
+  - { port: "{{ vps_ssh_port }}", proto: tcp, comment: "SSH" }
+  - { port: "80", proto: tcp, comment: "HTTP" }
+  - { port: "443", proto: tcp, comment: "HTTPS" }
+
+# Per-host extra ports (override in host_vars)
+vps_ufw_extra_ports: []
+
+# Base packages
+vps_base_packages:
+  - curl
+  - htop
+  - btop
+  - jq
+  - net-tools
+  - dnsutils
+  - mtr
+  - iperf3
+  - fail2ban
+  - unattended-upgrades
+  - figlet
+  - sysstat
+  - lsof
+
+# MOTD
+vps_motd_disable_defaults:
+  - 00-header
+  - 10-help-text
+  - 50-motd-news
+  - 50-landscape-sysinfo
+vps_motd_keep_defaults:
+  - 90-updates-available
+  - 92-unattended-upgrades
+  - 98-reboot-required
+vps_motd_services: []

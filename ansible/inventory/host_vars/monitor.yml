@@ -1,0 +1,25 @@
+---
+# monitor specific variables
+
+# Beszel agent runs next to the hub (cluster/monitor/beszel)
+beszel_hub_url: http://localhost:8090
+beszel_agent_legacy_data_dir: /mnt/data/beszel_agent_data
+
+firewall_rules:
+  # Via Traefik (and Homarr direct checks) only
+  - { route: true, from: "{{ firewall_traefik }}", port: 3000, comment: "Grafana (auth proxy)" }
+  - { route: true, from: "{{ firewall_traefik }}", port: 9090, comment: "Prometheus" }
+  - { route: true, from: "{{ firewall_traefik }}", port: 9093, comment: "Alertmanager" }
+  - { route: true, from: "{{ firewall_traefik }}", port: 3001, comment: "Uptime Kuma" }
+  # Proxmox pushes metrics (proxmox-metrics.yml); UI via Traefik
+  - { route: true, from: "{{ hostvars['pve-nuc'].ansible_host }}", port: 8086, comment: "InfluxDB writes from Proxmox" }
+  - { route: true, from: "{{ firewall_traefik }}", port: 8086, comment: "InfluxDB UI" }
+  # Beszel agents on every LAN host connect in to the hub
+  - { route: true, from: "{{ firewall_lan }}", port: 8090, comment: "Beszel hub" }
+  # Prometheus (container) scrapes targets on this host's own IP. node_exporter
+  # is native. The pve-exporter and Alertmanager containers share Prometheus's
+  # compose network, so 192.168.10.230:<port> hairpins through docker-proxy
+  # (host INPUT) instead of DOCKER-USER.
+  - { from: "{{ firewall_docker_nets }}", port: 9100, comment: "node_exporter from Prometheus container" }
+  - { from: "{{ firewall_docker_nets }}", port: 9221, comment: "PVE exporter from Prometheus (hairpin)" }
+  - { from: "{{ firewall_docker_nets }}", port: 9093, comment: "Alertmanager from Prometheus (hairpin)" }

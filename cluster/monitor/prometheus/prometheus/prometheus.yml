@@ -1,0 +1,66 @@
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+scrape_configs:
+  - job_name: prometheus
+    honor_timestamps: true
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    scheme: http
+    static_configs:
+      - targets:
+        - localhost:9090
+
+  - job_name: 'traefik'
+    static_configs:
+      - targets:
+        - 192.168.10.141:8888  # Traefik metrics endpoint on ts-router
+    metric_relabel_configs:
+      # Mark services that may be offline as expected_offline
+      - source_labels: [service]
+        regex: 'pihole@file|pihole2@file'
+        target_label: expected_offline
+        replacement: 'true'
+
+  - job_name: 'pve-nuc'
+    static_configs:
+      - targets:
+        - 192.168.10.120  # Proxmox VE NUC node
+    metrics_path: /pve
+    params:
+      module: [default]
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 192.168.10.230:9221  # PVE exporter on monitor box
+
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets:
+        - 192.168.10.230:9093
+
+  - job_name: 'vm-linux-boxes'
+    honor_timestamps: true
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    scheme: http
+    # Generated from the Ansible inventory by playbooks/monitoring.yml
+    file_sd_configs:
+      - files:
+          - /etc/prometheus/targets/node-exporter.yml
+rule_files:
+  - "rules/prometheus.yml"
+  - "rules/host.yml"
+  - "rules/traefik.yml"
+alerting:
+  alertmanagers:
+    - scheme: http
+      static_configs:
+        - targets:
+          - alertmanager:9093

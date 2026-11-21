@@ -1,0 +1,41 @@
+name: Maintenance
+
+# Manual runs. Scheduled runs live in maintenance-weekly.yml / maintenance-daily.yml
+# (one cron per file: Forgejo doesn't reliably expose which schedule fired).
+on:
+  workflow_dispatch:
+    inputs:
+      playbook:
+        description: 'Maintenance playbook to run'
+        required: true
+        default: 'maintenance-all'
+        type: choice
+        options:
+          - maintenance-all
+          - docker-cleanup
+          - host-cleanup
+          - proxmox-health
+          - update-systems
+          - update-proxmox
+          - security-hardening
+      notify:
+        description: 'Send the Telegram summary/alert'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  maintenance:
+    name: ${{ inputs.playbook }}
+    runs-on: self-hosted
+    env:
+      SF_TELEGRAM_BOT_TOKEN: ${{ secrets.SF_TELEGRAM_BOT_TOKEN }}
+      SF_TELEGRAM_CHAT_ID: ${{ secrets.SF_TELEGRAM_CHAT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run selected playbook
+        working-directory: ansible
+        run: |
+          echo "### Running ${{ inputs.playbook }} (notify: ${{ inputs.notify }})"
+          ansible-playbook playbooks/${{ inputs.playbook }}.yml -e notify_telegram=${{ inputs.notify }}

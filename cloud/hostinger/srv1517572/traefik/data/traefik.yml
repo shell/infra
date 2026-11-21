@@ -1,0 +1,32 @@
+api:
+  dashboard: true
+  insecure: true
+accessLog:
+  filePath: "/var/log/traefik/access.log"
+  filters:
+    statusCodes:
+      - "400-499"
+entryPoints:
+  http:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: https
+          scheme: https
+  https:
+    address: ":443"
+providers:
+  docker:
+    endpoint: "tcp://docker-socket-proxy:2375"
+    exposedByDefault: false
+certificatesResolvers:
+  cloudflare:
+    acme:
+      email: penkinv@gmail.com
+      storage: acme.json
+      dnsChallenge:
+        provider: cloudflare
+        resolvers:
+          - "1.1.1.1:53"
+          - "1.0.0.1:53"

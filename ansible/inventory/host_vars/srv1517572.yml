@@ -1,0 +1,29 @@
+---
+# srv1517572 — Hostinger VPS (<VPS_IP>)
+
+# Docker Compose services to deploy
+docker_compose_dirs:
+  - traefik
+  - jitsi
+  - umami
+  - france-guide
+  - penk-in
+
+# Docker networks to create before deploying services
+vps_docker_networks:
+  - proxy
+
+# Jitsi videobridge UDP port
+vps_ufw_extra_ports:
+  - { port: "10000", proto: udp, comment: "Jitsi videobridge" }
+
+# MOTD service status
+vps_motd_services:
+  - name: "Jitsi"
+    check: "docker ps --filter 'name=jitsi-web' --format '{% raw %}{{.Status}}{% endraw %}'"
+  - name: "Umami"
+    check: "docker ps --filter 'name=umami' --format '{% raw %}{{.Status}}{% endraw %}'"
+  - name: "France Guide"
+    check: "docker ps --filter 'name=france-guide' --format '{% raw %}{{.Status}}{% endraw %}'"
+  - name: "penk.in preview"
+    check: "docker ps --filter 'name=penk-in' --format '{% raw %}{{.Status}}{% endraw %}'"

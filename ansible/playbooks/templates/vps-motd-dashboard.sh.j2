@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# Colors
+GREEN="\e[32m"
+CYAN="\e[36m"
+YELLOW="\e[33m"
+RED="\e[31m"
+RESET="\e[0m"
+
+HOST=$(hostname)
+UPTIME=$(uptime -p | sed 's/up //')
+LOAD=$(cut -d ' ' -f1-3 /proc/loadavg)
+MEM=$(free -h | awk '/Mem:/ {print $3 "/" $2}')
+DISK=$(df -h / | awk 'NR==2{print $3 "/" $2 " (" $5 ")"}')
+IP=$(curl -s --connect-timeout 3 ifconfig.me)
+USERS=$(who | wc -l)
+FAIL2BAN=$(systemctl is-active fail2ban 2>/dev/null)
+UFW=$(ufw status | head -n1 | sed 's/Status: //')
+
+echo -e "${CYAN}"
+figlet -f slant "$HOST"
+echo -e "${RESET}"
+
+echo -e " ${GREEN}System Overview${RESET}"
+echo " ───────────────────────────────────────"
+echo -e " ⏱  Uptime        : ${UPTIME}"
+echo -e " 📈 Load Average  : ${LOAD}"
+echo -e " 🧠 Memory        : ${MEM}"
+echo -e " 💾 Disk (/)      : ${DISK}"
+echo -e " 🌐 Public IP     : ${IP:-unknown}"
+echo -e " 👥 SSH Sessions  : ${USERS}"
+echo ""
+
+echo -e " ${GREEN}Security Status${RESET}"
+echo " ───────────────────────────────────────"
+echo -e " 🔥 UFW           : ${UFW}"
+echo -e " 🛡  Fail2Ban      : ${FAIL2BAN}"
+{% for svc in vps_motd_services %}
+{% set var_name = svc.name | replace(' ', '_') | upper ~ '_STATUS' %}
+{{ var_name }}=$({{ svc.check }} 2>/dev/null)
+echo -e " 🌍 {{ svc.name }}       : {% raw %}${{% endraw %}{{ var_name }}:-stopped}"
+{% endfor %}
+BANS=$(sudo fail2ban-client status sshd 2>/dev/null | grep "Currently banned" | awk '{print $4}')
+echo -e " 🚫 Banned IPs    : ${BANS:-0}"
+
+if [ -f /var/run/reboot-required ]; then
+  echo -e " ⚠️  ${YELLOW}Reboot Required${RESET}"
+fi
+
+echo ""

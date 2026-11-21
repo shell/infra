@@ -1,0 +1,10 @@
+---
+# ts-router specific variables
+
+tailscale_config:
+  udp_port: 41641
+
+# UFW comes last here: as Tailscale subnet router + exit node it needs routed
+# traffic allowed (tailscale0 -> LAN/internet). Enable once the other hosts are
+# verified, with console/JetKVM access at hand.
+firewall_enabled: false

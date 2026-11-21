@@ -1,0 +1,33 @@
+---
+# Variables for Proxmox hypervisors
+
+# Proxmox update settings (update-proxmox.yml)
+proxmox_update:
+  dist_upgrade: true
+  check_repo_config: true
+
+# Proxmox health check settings (proxmox-health.yml)
+proxmox_health:
+  disk_space_warn_pct: 15
+  lvm_meta_warn_pct: 75
+  smart_enabled: true
+  zfs_scrub_interval_days: 30
+  temp_warn_celsius: 80
+
+# VM backups to Proxmox Backup Server (proxmox-backup.yml, docs/proxmox-backup.md)
+# PBS runs as VM 106 on pve-nuc; its datastore lives in Backblaze B2.
+proxmox_backup:
+  storage_id: pbs-b2
+  pbs_server: "192.168.10.150"   # PBS VM 106
+  pbs_fingerprint: "43:69:0c:0d:3f:ef:3e:d3:60:13:2a:04:67:57:ad:07:c3:ea:e1:45:b3:46:de:cb:bf:a0:32:09:05:ee:44:c7"
+  pbs_datastore: backblaze-b2
+  pbs_username: "pve@pbs!pve"
+  pbs_vmid: 106             # never back PBS up into itself
+  job_id: nightly-pbs-b2
+  schedule: "02:30"
+  # Data disks NOT backed up: media/Immich on servarr, Prometheus/Grafana on monitor
+  excluded_disks:
+    - { vmid: 101, disk: scsi1 }
+    - { vmid: 102, disk: scsi1 }
+  # Telegram failure alerts reuse the alertmanager bot token/chat
+  telegram_env_file: "cluster/monitor/prometheus/.env.enc"

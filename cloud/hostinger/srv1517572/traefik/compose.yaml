@@ -1,0 +1,70 @@
+services:
+  traefik:
+    image: traefik:v3.6
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - backend
+    ports:
+      - 80:80
+      - 443:443
+      - 127.0.0.1:8080:8080
+    env_file:
+      - .env
+    environment:
+      - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /home/vlad/traefik/data/traefik.yml:/traefik.yml:ro
+      - /home/vlad/traefik/data/acme.json:/acme.json
+      - /home/vlad/traefik/logs:/var/log/traefik
+    depends_on:
+      docker-socket-proxy:
+        condition: service_healthy
+
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: docker-socket-proxy
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - LOG_LEVEL=info
+      - CONTAINERS=1
+      - NETWORKS=1
+      - SERVICES=1
+      - TASKS=1
+      - BUILD=0
+      - COMMIT=0
+      - CONFIGS=0
+      - DISTRIBUTION=0
+      - EXEC=0
+      - GRPC=0
+      - IMAGES=0
+      - INFO=0
+      - NODES=0
+      - PLUGINS=0
+      - POST=0
+      - SECRETS=0
+      - SESSION=0
+      - SWARM=0
+      - SYSTEM=0
+      - VOLUMES=0
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:2375/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  proxy:
+    external: true
+  backend:
+    driver: bridge

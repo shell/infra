@@ -1,0 +1,14 @@
+# data: config.json, users, processing history, RAG index, local
+# embedding/OCR models (data/models, ~150 MB).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: paperless-ai-data
+  namespace: apps-internal
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 2Gi

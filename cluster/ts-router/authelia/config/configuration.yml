@@ -1,0 +1,135 @@
+---
+theme: dark
+
+server:
+  address: 'tcp://:9091'
+  endpoints:
+    authz:
+      # Session cookie only. The default also accepts `Authorization: Basic`,
+      # which hijacks backends that use that header for their own login
+      # (InfluxDB's sign-in form triggered a browser Basic-auth prompt).
+      forward-auth:
+        implementation: 'ForwardAuth'
+        authn_strategies:
+          - name: 'CookieSession'
+
+log:
+  level: info
+
+authentication_backend:
+  file:
+    path: /config/users_database.secret.yml
+    password:
+      algorithm: argon2
+      argon2:
+        variant: argon2id
+        iterations: 3
+        memory: 65536
+        parallelism: 4
+        key_length: 32
+        salt_length: 16
+
+access_control:
+  default_policy: deny
+  rules:
+    - domain: 'auth.sf.penk.in'
+      policy: bypass
+    - domain:
+        - 'grafana.sf.penk.in'
+        - 'influxdb.sf.penk.in'
+        - 'sonarr.sf.penk.in'
+        - 'radarr.sf.penk.in'
+        - 'prowlarr.sf.penk.in'
+        - 'prometheus.sf.penk.in'
+        - 'alertmanager.sf.penk.in'
+        - 'nzb.sf.penk.in'
+        - 'bazarr.sf.penk.in'
+        - 'pdf.sf.penk.in'
+        - 'jetkvm-nuc.sf.penk.in'
+        - 'paperless-ai.sf.penk.in'
+        - 'traefik.sf.penk.in'
+      policy: one_factor
+
+session:
+  name: authelia_session
+  same_site: lax
+  expiration: 1h
+  inactivity: 15m
+  remember_me: 1M
+  cookies:
+    - domain: 'sf.penk.in'
+      authelia_url: 'https://auth.sf.penk.in'
+      default_redirection_url: 'https://home.sf.penk.in'
+
+regulation:
+  max_retries: 5
+  find_time: 2m
+  ban_time: 5m
+
+storage:
+  local:
+    path: /data/db.sqlite3
+
+notifier:
+  filesystem:
+    filename: /data/notification.txt
+
+identity_providers:
+  oidc:
+    # Grafana evaluates role_attribute_path against the ID token first and
+    # stops at any non-empty result (the `|| 'Viewer'` fallback), so groups
+    # must be in the ID token, not only in userinfo (4.39 default).
+    claims_policies:
+      grafana:
+        id_token: [email, name, groups, preferred_username]
+    clients:
+      - client_id: homarr
+        client_name: Homarr
+        client_secret: '$pbkdf2-sha512$310000$EC4U9ddCzMjHRNAwi2FuBA$B5.rtHghwGGZghZuh87y3fJ9t/kHI/0XLn7ka1mJ1aGkwAuZ5ehNoy8L2Seqb4O1HzhWYW1EiThv7wPd8SA/9g'
+        public: false
+        authorization_policy: one_factor
+        redirect_uris:
+          - 'https://home.sf.penk.in/api/auth/callback/authelia'
+        scopes:
+          - openid
+          - profile
+          - email
+          - groups
+      # https://www.authelia.com/integration/openid-connect/clients/beszel/
+      # Plain secret: BESZEL_OIDC_CLIENT_SECRET in cluster/monitor/beszel/.env.enc
+      - client_id: beszel
+        client_name: Beszel
+        client_secret: '$pbkdf2-sha512$310000$FulmCD.xlZTRpf7bHEozBw$9MUesod75OdTqpzpas.lMtkuVTnsQvcDShKvwsQGSYjXO9wTSq80x.LJDHMPhOIZxjZAFJe.UFh/w4Wf0t0AHA'
+        public: false
+        authorization_policy: one_factor
+        require_pkce: true
+        pkce_challenge_method: S256
+        redirect_uris:
+          - 'https://beszel.sf.penk.in/api/oauth2-redirect'
+        scopes:
+          - openid
+          - email
+          - profile
+        response_types:
+          - code
+        grant_types:
+          - authorization_code
+        access_token_signed_response_alg: none
+        userinfo_signed_response_alg: none
+        token_endpoint_auth_method: client_secret_basic
+      - client_id: grafana
+        client_name: Grafana
+        client_secret: '$pbkdf2-sha512$310000$jY/2fI/HGFEIStosQyuMGw$lLdz7JnBbbaNPxuLifI1WtpmEgLFNOI1gpswtXIZZw1.BlMFhRpXxMLoyRs5.QTGPzO2pUb/1N5bYUIearIlQw'
+        public: false
+        authorization_policy: one_factor
+        require_pkce: true
+        pkce_challenge_method: S256
+        claims_policy: grafana
+        redirect_uris:
+          - 'https://grafana.sf.penk.in/login/generic_oauth'
+        scopes: [openid, profile, email, groups]
+        response_types: [code]
+        grant_types: [authorization_code]
+        access_token_signed_response_alg: none
+        userinfo_signed_response_alg: none
+        token_endpoint_auth_method: client_secret_basic

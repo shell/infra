@@ -1,0 +1,62 @@
+{{/*
+  Telegram message layout (parse_mode: HTML), used by alertmanager.yml.tmpl.
+
+  Alerts are grouped by alertname, so a message is one alert type across one
+  or more hosts. Rules give it a static `summary` (the title) and a
+  per-host `description` (the detail line) — see prometheus/rules/*.yml.
+
+  Test-render inside the container:
+    docker exec <alertmanager> amtool template render \
+      --template.glob='/etc/alertmanager/templates/*.tmpl' \
+      --template.text='{{ template "telegram.message" . }}'
+*/}}
+
+{{ define "telegram.icon" -}}
+{{ if eq . "critical" }}🔴{{ else if eq . "warning" }}🟠{{ else if eq . "info" }}🔵{{ else }}🔥{{ end }}
+{{- end }}
+
+{{ define "telegram.title" -}}
+{{ if .CommonAnnotations.summary }}{{ .CommonAnnotations.summary | html }}{{ else }}{{ .GroupLabels.alertname | html }}{{ end }}
+
+{{- end }}
+
+{{/* Most specific "where" available: host, then Traefik service, then raw instance */}}
+{{ define "telegram.target" -}}
+{{ if .Labels.hostname }}{{ .Labels.hostname | html }}
+{{- else if .Labels.nodename }}{{ .Labels.nodename | html }}
+{{- else if .Labels.service }}{{ .Labels.service | html }}
+{{- else }}{{ .Labels.instance | html }}{{ end }}
+
+{{- end }}
+
+{{ define "telegram.duration" -}}
+{{ $d := (.EndsAt.Sub .StartsAt).Round 60000000000 -}}
+{{ if lt $d.Minutes 1.0 }}under 1m{{ else }}{{ reReplaceAll "m0s$" "m" $d.String }}{{ end }}
+{{- end }}
+
+{{ define "telegram.message" -}}
+{{ if .Alerts.Firing -}}
+{{ template "telegram.icon" .CommonLabels.severity }} <b>{{ template "telegram.title" . }}</b>
+{{- if gt (len .Alerts.Firing) 1 }} · {{ len .Alerts.Firing }} alerts{{ end }}
+{{ range .Alerts.Firing }}
+
+🖥 <b>{{ template "telegram.target" . }}</b>
+
+{{- if .Annotations.description }}
+{{ .Annotations.description | html }}{{ end }}
+
+<i>since {{ .StartsAt.Local.Format "Jan 2, 15:04 MST" }}</i>
+{{ end -}}
+{{ end -}}
+
+{{ if .Alerts.Resolved -}}
+{{ if .Alerts.Firing }}
+{{ end -}}
+✅ <b>Resolved: {{ template "telegram.title" . }}</b>
+
+{{ range .Alerts.Resolved -}}
+🖥 <b>{{ template "telegram.target" . }}</b>
+{{- if .Annotations.description }} · {{ .Annotations.description | html }}{{ end }} · <i>lasted {{ template "telegram.duration" . }}</i>
+{{ end -}}
+{{ end -}}
+{{ end }}

@@ -1,0 +1,89 @@
+services:
+  traefik:
+    image: traefik:v3.6
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - ts-router-net
+    ports:
+      - 80:80
+      - 443:443
+      - 8888:8888
+    # The Cloudflare token reaches lego as a file, not an env var: env vars show
+    # up in `docker inspect`, which Homarr can read via docker-socket-proxy
+    # (CONTAINERS=1). Value comes from CF_DNS_API_TOKEN in .env (.env.enc).
+    environment:
+      - CF_DNS_API_TOKEN_FILE=/run/secrets/cf_dns_api_token
+    secrets:
+      - cf_dns_api_token
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      # Docker socket now accessed via docker-socket-proxy for security
+      # - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /home/vlad/traefik/data/traefik.yml:/traefik.yml:ro
+      - /home/vlad/traefik/data/acme.json:/acme.json
+      - /home/vlad/traefik/data/config.yml:/config.yml:ro
+      - /home/vlad/traefik/logs:/var/log/traefik
+    # Probes the metrics entrypoint: proves Traefik's server is up and serving
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8888/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    depends_on:
+      - docker-socket-proxy
+
+  # Docker Socket Proxy - secure access to Docker API
+  docker-socket-proxy:
+    # Tags track HAProxy, not the proxy config; digest-pinned
+    image: tecnativa/docker-socket-proxy:latest@sha256:be1ac64f33bd82043beb504822a17ba6b71668ea1ad7cf51a9a01d27bb7ab047
+    container_name: docker-socket-proxy
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      # Only enable what Traefik needs
+      - LOG_LEVEL=info
+      - CONTAINERS=1
+      - NETWORKS=1
+      - SERVICES=1
+      - TASKS=1
+      # Security: disable everything else
+      - BUILD=0
+      - COMMIT=0
+      - CONFIGS=0
+      - DISTRIBUTION=0
+      - EXEC=0
+      - GRPC=0
+      - IMAGES=0
+      - INFO=0
+      - NODES=0
+      - PLUGINS=0
+      - POST=0
+      - SECRETS=0
+      - SESSION=0
+      - SWARM=0
+      - SYSTEM=0
+      - VOLUMES=0
+    networks:
+      - ts-router-net
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:2375/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    # No labels: the dashboard router (behind Authelia) and the wildcard
+    # certificate request live in data/config.yml (router traefik-dashboard)
+
+networks:
+  ts-router-net:
+    external: true
+
+secrets:
+  cf_dns_api_token:
+    environment: CF_DNS_API_TOKEN

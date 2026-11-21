@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maptoposter-web
+  namespace: apps
+  labels:
+    app: maptoposter-web
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: maptoposter-web
+  template:
+    metadata:
+      labels:
+        app: maptoposter-web
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+      containers:
+        - name: maptoposter-web
+          image: ghcr.io/shell/maptoposter-web:0.0.1
+          ports:
+            - containerPort: 5000
+          env:
+            - name: PORT
+              value: "5000"
+          resources:
+            requests:
+              memory: 1Gi
+              cpu: 500m
+            limits:
+              memory: 8Gi
+              cpu: "1"
+          volumeMounts:
+            - name: posters
+              mountPath: /app/maptoposter/posters
+            - name: osm-cache
+              mountPath: /app/.cache
+      volumes:
+        - name: posters
+          persistentVolumeClaim:
+            claimName: maptoposter-web-posters
+        - name: osm-cache
+          persistentVolumeClaim:
+            claimName: maptoposter-web-osm-cache

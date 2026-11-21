@@ -1,0 +1,18 @@
+---
+# Monitoring agents role — defaults
+#
+# Real values live in inventory/group_vars/monitored.yml (so other hosts can
+# read them via hostvars, e.g. to build the Prometheus target list).
+# These are only fallbacks.
+
+# Which agents to deploy. Each name must match a folder agents/<name>/main.yml.
+monitoring_agents:
+  - beszel_agent
+  - node_exporter
+
+# sops-encrypted YAML with agent secrets (decrypted on the controller)
+monitoring_secrets_file: "{{ playbook_dir }}/../secrets/monitoring.secret.yml"
+
+# Host that runs Prometheus; it receives the generated file_sd targets.
+prometheus_host: monitor
+prometheus_file_sd_dir: "/home/{{ hostvars[prometheus_host].ansible_user | default(ansible_user) }}/prometheus/prometheus/targets"

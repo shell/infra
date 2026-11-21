@@ -1,0 +1,15 @@
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: filesystem-trim
+  namespace: longhorn-system
+spec:
+  # Longhorn never reclaims blocks freed inside the volume unless it is told to.
+  # Write-heavy volumes (Prometheus TSDB compaction) grow their actual size until
+  # LonghornVolumeActualSpaceUsedWarning fires even though the filesystem is mostly empty.
+  cron: "0 4 * * *"
+  task: filesystem-trim
+  groups:
+    - default
+  retain: 0
+  concurrency: 1

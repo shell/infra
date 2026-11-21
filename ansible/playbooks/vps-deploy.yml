@@ -1,0 +1,177 @@
+---
+# Deploy Docker Compose services to VPS hosts
+#
+# Usage:
+#   Deploy all:          ansible-playbook playbooks/vps-deploy.yml -l srv1517572
+#   Deploy one service:  ansible-playbook playbooks/vps-deploy.yml -l srv1517572 -e service=traefik
+#   Dry run:             ansible-playbook playbooks/vps-deploy.yml -l srv1517572 --check
+
+- name: Deploy Docker Compose services to VPS
+  hosts: vps_hosts
+  become: no
+  vars:
+    base_path: "/home/{{ ansible_user }}"
+    repo_cloud_path: "{{ playbook_dir }}/../../cloud/hostinger"
+
+  tasks:
+    # ============================================================
+    # Section 1: Docker Networks
+    # ============================================================
+    - name: Create Docker networks
+      ansible.builtin.shell: |
+        docker network inspect {{ item }} >/dev/null 2>&1 || docker network create {{ item }}
+      loop: "{{ vps_docker_networks | default([]) }}"
+      register: network_result
+      changed_when: "'Creating' in network_result.stderr or item not in network_result.stdout"
+
+    # ============================================================
+    # Section 2: Service Directories
+    # ============================================================
+    - name: Set deploy list (all services or single service)
+      ansible.builtin.set_fact:
+        deploy_dirs: "{{ [service] if service is defined else docker_compose_dirs }}"
+
+    - name: Create service directories
+      ansible.builtin.file:
+        path: "{{ base_path }}/{{ item }}"
+        state: directory
+        mode: '0755'
+      loop: "{{ deploy_dirs }}"
+
+    - name: Set source directory
+      ansible.builtin.set_fact:
+        source_base: "{{ repo_cloud_path }}/{{ inventory_hostname }}"
+
+    # ============================================================
+    # Section 3: Sync Files
+    # ============================================================
+    - name: Copy docker-compose files and config
+      ansible.posix.synchronize:
+        src: "{{ source_base }}/{{ item }}/"
+        dest: "{{ base_path }}/{{ item }}/"
+        rsync_opts:
+          - "--exclude=.gitkeep"
+          - "--exclude=.env.enc"
+          - "--exclude=.env.example"
+          - "--exclude=acme.json"
+      loop: "{{ deploy_dirs }}"
+
+    # ============================================================
+    # Section 4: Secrets
+    # ============================================================
+    - name: Check for encrypted .env files
+      ansible.builtin.stat:
+        path: "{{ source_base }}/{{ item }}/.env.enc"
+      loop: "{{ deploy_dirs }}"
+      register: env_files
+      delegate_to: localhost
+
+    - name: Decrypt .env files
+      ansible.builtin.shell: |
+        sops --decrypt --input-type dotenv --output-type dotenv "{{ source_base }}/{{ item.item }}/.env.enc"
+      loop: "{{ env_files.results }}"
+      when: item.stat.exists
+      register: decrypted_env
+      delegate_to: localhost
+      changed_when: false
+      no_log: true
+
+    - name: Write decrypted .env files to remote
+      ansible.builtin.copy:
+        content: "{{ item.stdout }}"
+        dest: "{{ base_path }}/{{ item.item.item }}/.env"
+        mode: '0600'
+      loop: "{{ decrypted_env.results }}"
+      when: item.stdout is defined
+      no_log: true
+
+    # ============================================================
+    # Section 5: Traefik-specific setup
+    # ============================================================
+    - name: Create acme.json for Traefik
+      ansible.builtin.file:
+        path: "{{ base_path }}/traefik/data/acme.json"
+        state: touch
+        mode: '0600'
+        modification_time: preserve
+        access_time: preserve
+      when: "'traefik' in deploy_dirs"
+
+    - name: Create Traefik logs directory
+      ansible.builtin.file:
+        path: "{{ base_path }}/traefik/logs"
+        state: directory
+        mode: '0755'
+      when: "'traefik' in deploy_dirs"
+
+    # ============================================================
+    # Section 5b: Jitsi-specific setup
+    # ============================================================
+    # Since stable-11146 Jitsi containers run rootless (uid 1000) and need
+    # writable storage/tmp dirs pre-created under CONFIG.
+    - name: Create Jitsi config directories
+      ansible.builtin.file:
+        path: "{{ base_path }}/.jitsi-meet-cfg/{{ item }}"
+        state: directory
+        owner: "1000"
+        group: "1000"
+        mode: '0755'
+      loop:
+        - web
+        - prosody/config
+        - prosody/prosody-plugins-custom
+        - jicofo
+        - jvb
+        - storage/prosody
+        - storage/transcripts
+        - storage/web
+        - tmp/web-crontabs
+        - tmp/web-load-test
+      become: yes
+      when: "'jitsi' in deploy_dirs"
+
+    # ============================================================
+    # Section 6: Deploy
+    # ============================================================
+    - name: Find compose files
+      ansible.builtin.find:
+        paths: "{{ base_path }}/{{ item }}"
+        patterns:
+          - "compose.yml"
+          - "compose.yaml"
+          - "docker-compose.yml"
+          - "docker-compose.yaml"
+      loop: "{{ deploy_dirs }}"
+      register: found_compose_files
+
+    - name: Check for Dockerfile in service directories
+      ansible.builtin.stat:
+        path: "{{ base_path }}/{{ item }}/Dockerfile"
+      loop: "{{ deploy_dirs }}"
+      register: dockerfile_checks
+
+    - name: Set services with Dockerfiles
+      ansible.builtin.set_fact:
+        build_services: "{{ dockerfile_checks.results | selectattr('stat.exists') | map(attribute='item') | list }}"
+
+    - name: Deploy services with docker compose (pull)
+      ansible.builtin.shell: |
+        cd "{{ base_path }}/{{ item.item }}"
+        docker compose pull --quiet
+        docker compose down --remove-orphans 2>/dev/null || true
+        docker compose up -d --remove-orphans
+      loop: "{{ found_compose_files.results }}"
+      when: item.files | length > 0 and item.item not in build_services
+      register: deploy_result
+      changed_when: "'Started' in deploy_result.stdout or 'Recreated' in deploy_result.stdout"
+
+    - name: Deploy services with docker compose (build)
+      ansible.builtin.shell: |
+        cd "{{ base_path }}/{{ item.item }}"
+        docker compose build
+        docker compose down --remove-orphans 2>/dev/null || true
+        docker compose up -d --remove-orphans
+      loop: "{{ found_compose_files.results }}"
+      when: item.files | length > 0 and item.item in build_services
+      register: build_result
+      changed_when: "'Started' in build_result.stdout or 'Recreated' in build_result.stdout"

@@ -1,0 +1,156 @@
+---
+# Host firewall (UFW) for Docker hosts — declarative, default-deny
+#
+# Two layers, both managed by UFW:
+#   * Host ports (sshd, node_exporter, ...): regular `ufw allow` rules (INPUT).
+#   * Docker-published ports: these skip UFW's INPUT rules (Docker DNATs them
+#     into FORWARD), so a DOCKER-USER block in /etc/ufw/after.rules sends new
+#     inbound connections to containers through UFW's route rules
+#     (`ufw route allow`), and drops/logs the rest ("[UFW DOCKER BLOCK]").
+#     Route rules match the CONTAINER port (post-DNAT), e.g. 13378->80 is port 80.
+#
+# Rules come from firewall_common_rules (group_vars/docker_hosts.yml) plus
+# firewall_rules (host_vars). They are declarative: missing rules are added
+# first, then any rule not in the inventory is removed — including ones added
+# by hand. `from` may be a single source or a list.
+#
+# Usage:
+#   ansible-playbook playbooks/firewall.yml -l servarr --check --diff
+#   ansible-playbook playbooks/firewall.yml -l servarr
+#   Roll back one host (ufw disable):  -l servarr -e firewall_enabled=false
+#   Debug blocked traffic:  sudo journalctl -k | grep -E 'UFW (BLOCK|DOCKER BLOCK)'
+
+- name: Host firewall (UFW)
+  hosts: docker_hosts
+  become: yes
+
+  tasks:
+    - name: Turn UFW off (firewall_enabled is false)
+      ansible.builtin.shell: |
+        if command -v ufw >/dev/null && ufw status | grep -q '^Status: active'; then
+          ufw disable && echo DISABLED
+        fi
+      register: ufw_off
+      changed_when: "'DISABLED' in ufw_off.stdout"
+      when: not (firewall_enabled | bool)
+
+    - name: Manage UFW
+      when: firewall_enabled | bool
+      block:
+        - name: Install UFW
+          ansible.builtin.apt:
+            name: ufw
+            state: present
+
+        # ----------------------------------------------------------
+        # Docker integration (DOCKER-USER -> ufw route rules)
+        # ----------------------------------------------------------
+        # UFW loads before.rules, after.rules, then user.rules, so the
+        # ufw-user-forward chain declared here is filled with the route rules
+        # afterwards. Docker never modifies DOCKER-USER, and UFW starts before
+        # Docker at boot, so this survives reboots and Docker restarts.
+        - name: Hook Docker-published ports into UFW
+          ansible.builtin.blockinfile:
+            path: /etc/ufw/after.rules
+            marker: "# {mark} ANSIBLE MANAGED - UFW and Docker"
+            block: |
+              *filter
+              :ufw-user-forward - [0:0]
+              :ufw-docker-logging-deny - [0:0]
+              :DOCKER-USER - [0:0]
+              -A DOCKER-USER -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN
+              -A DOCKER-USER -s {{ firewall_docker_nets }} -j RETURN
+              -A DOCKER-USER -j ufw-user-forward
+              -A DOCKER-USER -d {{ firewall_docker_nets }} -j ufw-docker-logging-deny
+              -A DOCKER-USER -j RETURN
+              -A ufw-docker-logging-deny -m limit --limit 3/min --limit-burst 10 -j LOG --log-prefix "[UFW DOCKER BLOCK] "
+              -A ufw-docker-logging-deny -j DROP
+              COMMIT
+          register: ufw_after_rules
+
+        # ----------------------------------------------------------
+        # Defaults
+        # ----------------------------------------------------------
+        - name: Default policies
+          community.general.ufw:
+            default: "{{ item.policy }}"
+            direction: "{{ item.direction }}"
+          loop:
+            - { direction: incoming, policy: deny }
+            - { direction: outgoing, policy: allow }
+            - { direction: routed, policy: "{{ firewall_default_routed }}" }
+
+        - name: Log blocked packets
+          community.general.ufw:
+            logging: low
+
+        # ----------------------------------------------------------
+        # Rules (declarative)
+        # ----------------------------------------------------------
+        - name: Build desired rule list
+          ansible.builtin.set_fact:
+            firewall_desired: "{{ firewall_desired | default([]) + lines }}"
+          vars:
+            srcs: "{{ [item.from] if item.from is string else item.from }}"
+            prefix: "ufw {{ 'route ' if item.route | default(false) else '' }}allow from "
+            suffix: >-
+              {{ (' to any port ' ~ item.port ~ ' proto ' ~ (item.proto | default('tcp')))
+                 if item.port is defined else '' }} comment '{{ item.comment }}'
+            lines: "{{ srcs | map('regex_replace', '^', prefix) | map('regex_replace', '$', suffix) | list }}"
+          loop: "{{ firewall_common_rules + firewall_rules }}"
+          loop_control:
+            label: "{{ item.comment }}"
+
+        - name: Read current rules
+          ansible.builtin.command: ufw show added
+          register: ufw_current
+          changed_when: false
+          check_mode: false
+
+        - name: Compute rule changes
+          ansible.builtin.set_fact:
+            firewall_current: "{{ current }}"
+            firewall_to_add: "{{ firewall_desired | difference(current) }}"
+            firewall_to_remove: "{{ current | difference(firewall_desired) }}"
+          vars:
+            current: "{{ ufw_current.stdout_lines | select('match', '^ufw ') | list }}"
+
+        # Add before removing, so a reworded rule never leaves a gap
+        - name: Add missing rules
+          ansible.builtin.shell: "{{ item }}"
+          loop: "{{ firewall_to_add }}"
+
+        - name: Remove rules not in inventory
+          ansible.builtin.shell: >-
+            {{ ('ufw route delete ' ~ item[10:]) if item.startswith('ufw route ')
+               else ('ufw delete ' ~ item[4:]) }}
+          loop: "{{ firewall_to_remove }}"
+
+        # ----------------------------------------------------------
+        # Enable / reload
+        # ----------------------------------------------------------
+        - name: Check UFW status
+          ansible.builtin.command: ufw status
+          register: ufw_status
+          changed_when: false
+          check_mode: false
+
+        - name: Enable UFW
+          ansible.builtin.command: ufw --force enable
+          when: "'Status: active' not in ufw_status.stdout"
+
+        - name: Reload UFW (after.rules changed)
+          ansible.builtin.command: ufw reload
+          when:
+            - "'Status: active' in ufw_status.stdout"
+            - ufw_after_rules.changed
+
+        - name: Final status
+          ansible.builtin.command: ufw status verbose
+          register: ufw_final
+          changed_when: false
+          check_mode: false
+
+        - name: UFW status
+          ansible.builtin.debug:
+            msg: "{{ ufw_final.stdout_lines }}"

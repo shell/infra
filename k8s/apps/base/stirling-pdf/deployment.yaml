@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stirling-pdf
+  namespace: apps-internal
+  labels:
+    app: stirling-pdf
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate # RWO volume
+  selector:
+    matchLabels:
+      app: stirling-pdf
+  template:
+    metadata:
+      labels:
+        app: stirling-pdf
+    spec:
+      initContainers:
+        # OCR languages live on the volume: the image's bundled ones plus
+        # extra languages from the official tessdata 4.1.0 release
+        # (downloaded once). Mounting a volume over the tessdata dir would
+        # otherwise hide the bundled languages.
+        - name: tessdata
+          image: stirlingtools/stirling-pdf:3.3.0-fat
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              cp -rn /usr/share/tesseract-ocr/5/tessdata/. /tessdata/
+              for lang in $OCR_EXTRA_LANGS; do
+                f="/tessdata/$lang.traineddata"
+                [ -s "$f" ] && continue
+                echo "Downloading $lang"
+                curl -fsSL -o "$f.tmp" "https://github.com/tesseract-ocr/tessdata/raw/4.1.0/$lang.traineddata"
+                mv "$f.tmp" "$f"
+              done
+              ls /tessdata
+          env:
+            - name: OCR_EXTRA_LANGS
+              value: rus
+          volumeMounts:
+            - name: data
+              mountPath: /tessdata
+              subPath: tessdata
+      containers:
+        - name: stirling-pdf
+          image: stirlingtools/stirling-pdf:3.3.0-fat
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            # settings.yml security.enableLogin; fresh 3.x installs default
+            # to login on with a default admin user. LAN-only, no login.
+            - name: SECURITY_ENABLELOGIN
+              value: "false"
+            - name: INSTALL_BOOK_AND_ADVANCED_HTML_OPS
+              value: "false"
+            - name: LANGS
+              value: en_US,ru_RU
+            # settings.yml system.tessdataDir
+            - name: SYSTEM_TESSDATADIR
+              value: /usr/share/tessdata
+          resources:
+            requests:
+              cpu: 250m
+              memory: 1Gi
+            limits:
+              memory: 4Gi
+          startupProbe:
+            httpGet:
+              path: /api/v1/info/status
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30 # fat image: allow up to 5 min to boot
+          readinessProbe:
+            httpGet:
+              path: /api/v1/info/status
+              port: http
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /api/v1/info/status
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 5
+          volumeMounts:
+            - name: data
+              mountPath: /configs
+              subPath: configs
+            - name: data
+              mountPath: /customFiles
+              subPath: customFiles
+            - name: data
+              mountPath: /pipeline
+              subPath: pipeline
+            - name: data
+              mountPath: /usr/share/tessdata
+              subPath: tessdata
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: stirling-pdf-data

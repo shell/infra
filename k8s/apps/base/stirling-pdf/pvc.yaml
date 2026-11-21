@@ -1,0 +1,13 @@
+# Configs (settings.yml, DB, keys), custom files, pipelines and OCR data.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: stirling-pdf-data
+  namespace: apps-internal
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 5Gi

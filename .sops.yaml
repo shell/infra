@@ -1,0 +1,51 @@
+# SOPS Configuration
+# See: https://github.com/getsops/sops
+
+creation_rules:
+  # SSH CA private key
+  - path_regex: ssh-ca/ca_key$
+    age: >-
+      age1drn9f3pzvgxfjs2y22f6fr47ctd32q7k0ul075xxyfnaqczxygts7wknfj
+
+  # Tailscale ACL policy (contains tailnet member emails)
+  - path_regex: tailscale/config\.acl$
+    age: >-
+      age1drn9f3pzvgxfjs2y22f6fr47ctd32q7k0ul075xxyfnaqczxygts7wknfj
+
+  # Encrypt all .env files
+  - path_regex: \.env(\.enc)?$
+    age: >-
+      age1drn9f3pzvgxfjs2y22f6fr47ctd32q7k0ul075xxyfnaqczxygts7wknfj
+    # ^^^ Replace with your actual age public key after running:
+    # age-keygen -o ~/.config/sops/age/keys.txt
+    # Then copy the public key here
+
+  # Encrypt any file ending in .secret.yml
+  - path_regex: \.secret\.yml$
+    age: >-
+      age1drn9f3pzvgxfjs2y22f6fr47ctd32q7k0ul075xxyfnaqczxygts7wknfj
+
+  # Encrypt any file ending in .secret.json (e.g. PBS encryption key)
+  - path_regex: \.secret\.json$
+    age: >-
+      age1drn9f3pzvgxfjs2y22f6fr47ctd32q7k0ul075xxyfnaqczxygts7wknfj
+
+  # Encrypt Terraform variable files (secrets)
+  - path_regex: \.tfvars$
+    age: >-
+      age1drn9f3pzvgxfjs2y22f6fr47ctd32q7k0ul075xxyfnaqczxygts7wknfj
+
+  # Talos secrets bundle and machine configs — encrypt only secret fields
+  - path_regex: cluster/dell-optiplex/secrets\.yaml$
+    age: >-
+      age1drn9f3pzvgxfjs2y22f6fr47ctd32q7k0ul075xxyfnaqczxygts7wknfj
+
+  - path_regex: cluster/dell-optiplex/(controlplane|worker\d+)\.yaml$
+    encrypted_regex: "^(key|secret|token|secretboxEncryptionSecret)$"
+    age: >-
+      age1drn9f3pzvgxfjs2y22f6fr47ctd32q7k0ul075xxyfnaqczxygts7wknfj
+
+  # k8s GitOps secrets, decrypted in-cluster by Flux's kustomize-controller
+  - path_regex: k8s/.*\.secret\.yaml$
+    age: >-
+      age1drn9f3pzvgxfjs2y22f6fr47ctd32q7k0ul075xxyfnaqczxygts7wknfj

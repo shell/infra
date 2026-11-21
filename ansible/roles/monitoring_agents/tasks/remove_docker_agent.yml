@@ -1,0 +1,19 @@
+---
+# Remove an agent that used to run as a Docker container (cluster/<host>/<dir>).
+# Inputs:
+#   legacy_container: container name
+#   legacy_dir:       compose dir on the host; kept if it is still listed in
+#                     docker_compose_dirs (e.g. monitor's beszel hub)
+
+- name: "Legacy | Remove Docker container {{ legacy_container }}"
+  ansible.builtin.command: docker rm -f {{ legacy_container }}
+  register: _legacy_rm
+  changed_when: _legacy_rm.rc == 0
+  failed_when: _legacy_rm.rc != 0 and 'No such container' not in _legacy_rm.stderr
+  when: monitoring_has_docker
+
+- name: "Legacy | Remove compose dir {{ legacy_dir }}"
+  ansible.builtin.file:
+    path: "{{ legacy_dir }}"
+    state: absent
+  when: (legacy_dir | basename) not in (docker_compose_dirs | default([]))

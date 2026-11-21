@@ -1,0 +1,53 @@
+---
+# Variables for all Docker hosts
+
+base_path: "/home/{{ ansible_user }}"
+
+# System update settings (update-systems.yml)
+system_update:
+  allow_dist_upgrade: false
+  reboot_timeout: 300
+  pre_reboot_delay: 5
+  health_check_delay: 30
+
+# Docker cleanup settings (docker-cleanup.yml)
+docker_cleanup:
+  prune_images: true
+  prune_volumes: true
+  prune_networks: true
+  prune_build_cache: true
+
+# Host cleanup settings (host-cleanup.yml)
+host_cleanup:
+  journal_max_age: "14d"
+  journal_max_size: "500M"
+  tmp_max_age_days: 7
+  keep_kernels: 2
+
+# Security hardening settings (security-hardening.yml)
+security:
+  lan_subnet: "192.168.10.0/24"
+  ssh_max_auth_tries: 3
+  fail2ban_max_retry: 5
+  fail2ban_ban_time: 3600
+
+# Host firewall (firewall.yml): UFW default-deny for host ports AND
+# Docker-published ports. Declarative — rules not listed here or in host_vars
+# firewall_rules are removed. Rule keys:
+#   from:    source (string or list)        port/proto: omit port for "any"
+#   route:   true for Docker-published ports — use the CONTAINER port
+#   comment: required, no single quotes
+firewall_enabled: true
+firewall_default_routed: deny
+firewall_lan: 192.168.10.0/24
+firewall_clients: 192.168.30.0/24      # client devices subnet
+firewall_traefik: 192.168.10.141       # ts-router: Traefik, Homarr direct checks, Tailscale (SNAT)
+firewall_prometheus: 192.168.10.230
+firewall_docker_nets: 172.16.0.0/12
+firewall_common_rules:
+  - { from: ["{{ firewall_lan }}", "{{ firewall_clients }}"], port: 22, comment: "SSH" }
+  - { from: "{{ firewall_prometheus }}", port: 9100, comment: "node_exporter from Prometheus" }
+# Containers reaching HOST services (not other containers' published ports;
+# DOCKER-USER covers those) are per host in host_vars, not blanket here, so a
+# compromised container can't reach sshd and friends.
+firewall_rules: []

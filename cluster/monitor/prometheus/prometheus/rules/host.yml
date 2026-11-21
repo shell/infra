@@ -1,0 +1,139 @@
+# https://samber.github.io/awesome-prometheus-alerts/rules
+groups:
+  - name: Host and hardware
+    rules:
+    - alert: HostOutOfMemory
+      expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100 < 10) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: 'Low on memory'
+        description: '{{ printf "%.0f" $value }}% memory available (< 10%)'
+    # You may want to increase the alert manager 'repeat_interval' for this type of alert to daily or weekly
+    # - alert: HostMemoryIsUnderutilized
+    #   expr: (100 - (avg_over_time(node_memory_MemAvailable_bytes[30m]) / node_memory_MemTotal_bytes * 100) < 20) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+    #   for: 1w
+    #   labels:
+    #     severity: info
+    #   annotations:
+    #     summary: Host Memory is underutilized (instance {{ $labels.instance }})
+    #     description: "Node memory is < 20% for 1 week. Consider reducing memory space. (instance {{ $labels.instance }})\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+    - alert: HostUnusualDiskReadRate
+      expr: (sum by (instance) (rate(node_disk_read_bytes_total[2m])) / 1024 / 1024 > 50) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: 'High disk read rate'
+        description: 'Reading {{ printf "%.0f" $value }} MB/s for 5m (> 50 MB/s)'
+    - alert: HostUnusualDiskWriteRate
+      expr: (sum by (instance) (rate(node_disk_written_bytes_total[2m])) / 1024 / 1024 > 50) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: 'High disk write rate'
+        description: 'Writing {{ printf "%.0f" $value }} MB/s for 10m (> 50 MB/s)'
+    # Please add ignored mountpoints in node_exporter parameters like
+    # "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|run)($|/)".
+    # Same rule using "node_filesystem_free_bytes" will fire when disk fills for non-root users.
+    - alert: HostOutOfDiskSpace
+      expr: ((node_filesystem_avail_bytes{mountpoint!="/boot"} * 100) / node_filesystem_size_bytes{mountpoint!="/boot"} < 10 and ON (instance, device, mountpoint) node_filesystem_readonly == 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: 'Low on disk space'
+        description: '{{ $labels.mountpoint }} has {{ printf "%.1f" $value }}% free (< 10%)'
+    # Please add ignored mountpoints in node_exporter parameters like
+    # "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|run)($|/)".
+    # Same rule using "node_filesystem_free_bytes" will fire when disk fills for non-root users.
+    - alert: HostDiskWillFillIn24Hours
+      expr: ((node_filesystem_avail_bytes * 100) / node_filesystem_size_bytes < 10 and ON (instance, device, mountpoint) predict_linear(node_filesystem_avail_bytes{fstype!~"tmpfs"}[1h], 24 * 3600) < 0 and ON (instance, device, mountpoint) node_filesystem_readonly == 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: 'Disk will fill within 24h'
+        description: '{{ $labels.mountpoint }} has {{ printf "%.1f" $value }}% free and is filling at the current write rate'
+    - alert: HostOutOfInodes
+      expr: (node_filesystem_files_free{fstype!="msdosfs",mountpoint!="/boot"} / node_filesystem_files{fstype!="msdosfs",mountpoint!="/boot"} * 100 < 10 and ON (instance, device, mountpoint) node_filesystem_readonly == 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: 'Low on inodes'
+        description: '{{ $labels.mountpoint }} has {{ printf "%.1f" $value }}% inodes free (< 10%)'
+    - alert: HostFilesystemDeviceError
+      expr: node_filesystem_device_error == 1
+      for: 0m
+      labels:
+        severity: critical
+      annotations:
+        summary: 'Filesystem device error'
+        description: '{{ $labels.mountpoint }} ({{ $labels.fstype }}): {{ if $labels.device_error }}{{ $labels.device_error }}{{ else }}cannot be read{{ end }}'
+    - alert: HostHighCpuLoad
+      expr: (sum by (instance) (avg by (mode, instance) (rate(node_cpu_seconds_total{mode!="idle"}[2m]))) > 0.8) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: 'High CPU load'
+        description: 'CPU at {{ $value | humanizePercentage }} for 10m (> 80%)'
+    - alert: HostUnusualDiskIo
+      expr: (rate(node_disk_io_time_seconds_total[1m]) > 0.5) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: 'Disk I/O saturated'
+        description: '{{ $labels.device }} busy {{ $value | humanizePercentage }} of the time for 5m (> 50%)'
+    - alert: HostSwapIsFillingUp
+      expr: ((1 - (node_memory_SwapFree_bytes / node_memory_SwapTotal_bytes)) * 100 > 80) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: 'Swap filling up'
+        description: '{{ printf "%.0f" $value }}% swap used (> 80%)'
+    - alert: HostSystemdServiceCrashed
+      expr: (node_systemd_unit_state{state="failed"} == 1) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+      for: 0m
+      labels:
+        severity: warning
+      annotations:
+        summary: 'Systemd unit failed'
+        description: '{{ $labels.name }} failed'
+    - alert: HostPhysicalComponentTooHot
+      expr: ((node_hwmon_temp_celsius * ignoring(label) group_left(instance, job, node, sensor) node_hwmon_sensor_label{label!="tctl"} > 75)) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: 'Hardware too hot'
+        description: '{{ $labels.chip }} {{ $labels.sensor }} at {{ printf "%.0f" $value }}°C for 5m (> 75°C)'
+    - alert: HostNodeOvertemperatureAlarm
+      expr: (node_hwmon_temp_crit_alarm_celsius == 1) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+      for: 0m
+      labels:
+        severity: critical
+      annotations:
+        summary: 'Hardware overtemperature alarm'
+        description: '{{ $labels.chip }} {{ $labels.sensor }} raised its critical temperature alarm'
+    - alert: HostOomKillDetected
+      expr: (increase(node_vmstat_oom_kill[1m]) > 0) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+      for: 0m
+      labels:
+        severity: warning
+      annotations:
+        summary: 'OOM kill'
+        description: 'Kernel killed {{ printf "%.0f" $value }} process(es) to free memory'
+    - alert: HostClockNotSynchronising
+      expr: (min_over_time(node_timex_sync_status[1m]) == 0 and node_timex_maxerror_seconds >= 16) * on(instance) group_left (nodename) node_uname_info{nodename=~".+"}
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: 'Clock not synchronising'
+        description: 'Clock is not NTP-synced (check systemd-timesyncd / chrony)'

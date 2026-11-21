@@ -1,0 +1,34 @@
+# https://samber.github.io/awesome-prometheus-alerts/rules
+groups:
+  - name: Traefik
+    rules:
+    - alert: TraefikServiceDown
+      expr: count(traefik_service_server_up{expected_offline!="true"}) by (service) == 0
+      for: 0m
+      labels:
+        severity: critical
+      annotations:
+        summary: 'Traefik service down'
+        description: 'No healthy backends'
+    - alert: TraefikHighHttp4xxErrorRateService
+      expr: sum(rate(traefik_service_requests_total{code=~"4.*"}[3m])) by (service) / sum(rate(traefik_service_requests_total[3m])) by (service) * 100 > 20
+      for: 10m
+      labels:
+        severity: critical
+      annotations:
+        summary: 'Traefik high 4xx error rate'
+        description: |-
+          {{ printf "%.0f" $value }}% of requests return 4xx (> 20% for 10m)
+          {{ with printf `sum(increase(traefik_service_requests_total{service="%s"}[10m]))` $labels.service | query }}Last 10m: {{ . | first | value | printf "%.0f" }} requests{{ end }}{{ range printf `sort_desc(sum by (code, method) (increase(traefik_service_requests_total{service="%s",code=~"4.."}[10m])) >= 1)` $labels.service | query }}
+          • {{ .Labels.code }} {{ .Labels.method }} ×{{ printf "%.0f" .Value }}{{ end }}
+    - alert: TraefikHighHttp5xxErrorRateService
+      expr: sum(rate(traefik_service_requests_total{code=~"5.*", expected_offline!="true"}[3m])) by (service) / sum(rate(traefik_service_requests_total{expected_offline!="true"}[3m])) by (service) * 100 > 20
+      for: 10m
+      labels:
+        severity: critical
+      annotations:
+        summary: 'Traefik high 5xx error rate'
+        description: |-
+          {{ printf "%.0f" $value }}% of requests return 5xx (> 20% for 10m)
+          {{ with printf `sum(increase(traefik_service_requests_total{service="%s",expected_offline!="true"}[10m]))` $labels.service | query }}Last 10m: {{ . | first | value | printf "%.0f" }} requests{{ end }}{{ range printf `sort_desc(sum by (code, method) (increase(traefik_service_requests_total{service="%s",expected_offline!="true",code=~"5.."}[10m])) >= 1)` $labels.service | query }}
+          • {{ .Labels.code }} {{ .Labels.method }} ×{{ printf "%.0f" .Value }}{{ end }}

@@ -1,0 +1,24 @@
+#---------------------------------------------------------------------#
+#     Homarr - A simple, yet powerful dashboard for your server.      #
+#---------------------------------------------------------------------#
+services:
+  homarrv1:
+    container_name: homarr-v2
+    image: ghcr.io/homarr-labs/homarr:latest
+    restart: unless-stopped
+    volumes:
+      - ./appdata:/appdata
+    env_file: .env
+    environment:
+      # Docker integration via the read-only socket proxy from the traefik stack
+      # (CONTAINERS=1, POST=0): container list/stats/logs work, start/stop doesn't.
+      - DOCKER_HOSTNAMES=docker-socket-proxy
+      - DOCKER_PORTS=2375
+    ports:
+      - '7576:7575'
+    networks:
+      - ts-router-net
+
+networks:
+  ts-router-net:
+    external: true

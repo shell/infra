@@ -1,0 +1,132 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Deploy target'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - ts-router
+          - servarr
+          - tools
+          - monitor
+          - runner
+          - pve-nuc
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - status
+          - restart
+          - monitoring
+          - proxmox-backup
+          - proxmox-metrics
+          - firewall
+
+jobs:
+  validate:
+    name: Validate before deploy
+    runs-on: docker
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install yamllint
+        run: apt-get update -qq && apt-get install -y -qq yamllint
+
+      - name: Quick validation
+        run: |
+          yamllint -d "{extends: relaxed, rules: {line-length: disable, truthy: disable}}" \
+            cluster/ --no-warnings
+
+  deploy:
+    name: ${{ inputs.action }} → ${{ inputs.target }}
+    needs: validate
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show parameters
+        run: |
+          echo "🎯 Target: ${{ inputs.target }}"
+          echo "⚡ Action: ${{ inputs.action }}"
+
+      - name: Verify SOPS key exists
+        run: |
+          if [ ! -f "$HOME/.config/sops/age/keys.txt" ]; then
+            echo "ERROR: SOPS age key not found at ~/.config/sops/age/keys.txt"
+            echo "Please ensure the runner host has the age key configured."
+            exit 1
+          fi
+
+      - name: Install Ansible collections
+        working-directory: ansible
+        run: ansible-galaxy collection install -r requirements.yml
+
+      - name: Set target hosts
+        id: hosts
+        run: |
+          if [ "${{ inputs.target }}" = "all" ]; then
+            echo "hosts=docker_hosts:monitored" >> $GITHUB_OUTPUT
+          else
+            echo "hosts=${{ inputs.target }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run status check
+        if: inputs.action == 'status'
+        working-directory: ansible
+        run: |
+          ansible-playbook playbooks/status.yml -l ${{ steps.hosts.outputs.hosts }}
+
+      # Deploying `runner` restarts Forgejo mid-job; the runner reconnects and
+      # finishes, but the UI may show the job as failed — check the next status run.
+      - name: Run deployment
+        if: inputs.action == 'deploy'
+        working-directory: ansible
+        run: |
+          ansible-playbook playbooks/deploy.yml -l ${{ steps.hosts.outputs.hosts }}
+
+      - name: Provision monitoring agents
+        if: inputs.action == 'monitoring'
+        working-directory: ansible
+        run: |
+          ansible-playbook playbooks/monitoring.yml -l ${{ steps.hosts.outputs.hosts }}
+
+      - name: Configure Proxmox backups
+        if: inputs.action == 'proxmox-backup'
+        working-directory: ansible
+        run: |
+          ansible-playbook playbooks/proxmox-backup.yml -l proxmox
+
+      # UFW for host + Docker-published ports. Never run against `runner` from
+      # here: a mistake there cuts off the very runner executing the job.
+      - name: Apply host firewall
+        if: inputs.action == 'firewall'
+        working-directory: ansible
+        run: |
+          ansible-playbook playbooks/firewall.yml -l '${{ steps.hosts.outputs.hosts }}:!runner'
+
+      - name: Configure Proxmox metric server
+        if: inputs.action == 'proxmox-metrics'
+        working-directory: ansible
+        run: |
+          ansible-playbook playbooks/proxmox-metrics.yml -l proxmox
+
+      - name: Run restart
+        if: inputs.action == 'restart'
+        working-directory: ansible
+        run: |
+          ansible-playbook playbooks/restart-service.yml -l ${{ steps.hosts.outputs.hosts }}
+
+      - name: Post-deploy status
+        if: inputs.action == 'deploy'
+        working-directory: ansible
+        run: |
+          echo "=== Post-deployment status ==="
+          ansible-playbook playbooks/status.yml -l ${{ steps.hosts.outputs.hosts }}

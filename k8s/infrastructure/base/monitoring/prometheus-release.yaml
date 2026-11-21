@@ -1,0 +1,105 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: prometheus
+  namespace: monitoring
+spec:
+  interval: 1h
+  releaseName: prometheus
+  targetNamespace: monitoring
+  chart:
+    spec:
+      chart: prometheus
+      version: "29.17.0"
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-community
+        namespace: monitoring
+  values:
+    alertmanager:
+      enabled: false
+    prometheus-pushgateway:
+      enabled: false
+    kube-state-metrics:
+      enabled: false
+    prometheus-node-exporter:
+      enabled: false
+    server:
+      nodeSelector:
+        kubernetes.io/hostname: diffler
+      retention: "30d"
+      retentionSize: "18GB"
+      persistentVolume:
+        enabled: true
+        size: 50Gi
+        storageClass: longhorn-diffler
+      service:
+        type: LoadBalancer
+        servicePort: 9090
+        annotations:
+          metallb.io/loadBalancerIPs: "192.168.10.241"
+      alertmanagers:
+          - static_configs:
+              - targets:
+                  - 192.168.10.230:9093
+    serverFiles:
+      alerting_rules.yml:
+        groups:
+          - name: longhorn.rules
+            rules:
+              - alert: LonghornVolumeActualSpaceUsedWarning
+                expr: (longhorn_volume_actual_size_bytes / longhorn_volume_capacity_bytes) * 100 > 90
+                for: 5m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: "Longhorn volume {{ $labels.volume }} actual used space is over 90% of capacity."
+              - alert: LonghornVolumeStatusCritical
+                expr: longhorn_volume_robustness == 3
+                for: 5m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: "Longhorn volume {{ $labels.volume }} is Fault."
+              - alert: LonghornVolumeStatusWarning
+                expr: longhorn_volume_robustness == 2
+                for: 5m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: "Longhorn volume {{ $labels.volume }} is Degraded."
+              - alert: LonghornNodeStorageWarning
+                expr: (longhorn_node_storage_usage_bytes / longhorn_node_storage_capacity_bytes) * 100 > 70
+                for: 5m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: "Longhorn node {{ $labels.node }} used storage is over 70% of capacity."
+              - alert: LonghornDiskStorageWarning
+                expr: (longhorn_disk_usage_bytes / longhorn_disk_capacity_bytes) * 100 > 70
+                for: 5m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: "Longhorn disk {{ $labels.disk }} used storage is over 70% of capacity."
+              - alert: LonghornNodeDown
+                expr: (avg(longhorn_node_count_total) or on() vector(0)) - (count(longhorn_node_status{condition="ready"} == 1) or on() vector(0)) > 0
+                for: 5m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: "One or more Longhorn nodes are offline."
+              - alert: LonghornInstanceManagerCPUUsageWarning
+                expr: (longhorn_instance_manager_cpu_usage_millicpu / longhorn_instance_manager_cpu_requests_millicpu) * 100 > 300
+                for: 5m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: "Longhorn instance manager {{ $labels.instance_manager }} CPU usage is over 300% of its request."
+              - alert: LonghornNodeCPUUsageWarning
+                expr: (longhorn_node_cpu_usage_millicpu / longhorn_node_cpu_capacity_millicpu) * 100 > 90
+                for: 5m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: "Longhorn node {{ $labels.node }} is under high CPU pressure."

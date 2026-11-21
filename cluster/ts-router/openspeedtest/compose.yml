@@ -1,0 +1,19 @@
+# Reached as https://speedtest.sf.penk.in through Traefik on this host, over
+# ts-router-net (no host port published).
+services:
+  openspeedtest:
+    container_name: openspeedtest
+    image: openspeedtest/latest:v2.0.8
+    restart: unless-stopped
+    networks:
+      - ts-router-net
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+networks:
+  ts-router-net:
+    external: true

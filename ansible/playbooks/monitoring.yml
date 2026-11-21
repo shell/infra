@@ -1,0 +1,24 @@
+---
+# Provision monitoring agents (beszel-agent, node_exporter, ...) as native
+# systemd services and refresh Prometheus scrape targets on the monitor host.
+#
+# Agents are defined in roles/monitoring_agents/agents/<name>/main.yml, mostly
+# thin wrappers around Galaxy collection roles pinned in requirements.yml.
+# Which agents a host gets: `monitoring_agents` (group_vars/monitored.yml,
+# overridable in host_vars).
+#
+# Usage:
+#   One-time:           ansible-galaxy collection install -r requirements.yml
+#   All hosts:          ansible-playbook playbooks/monitoring.yml
+#   One host:           ansible-playbook playbooks/monitoring.yml -l tools
+#   Dry run:            ansible-playbook playbooks/monitoring.yml --check --diff
+#
+# New box: add it to inventory/hosts.yml under `monitored` (or `docker_hosts`),
+# then run with -l <box>. Docker is optional. Requires passwordless sudo
+# (playbooks/setup-sudoers.yml) for unattended runs from GitHub Actions.
+
+- name: Provision monitoring agents
+  hosts: monitored
+  become: true
+  roles:
+    - monitoring_agents

@@ -1,0 +1,94 @@
+---
+# Install Docker CE + Compose plugin on Docker hosts
+#
+# Usage:
+#   ansible-playbook playbooks/docker-setup.yml -l monitor
+#   Dry run: ansible-playbook playbooks/docker-setup.yml -l monitor --check
+
+- name: Install Docker on Docker hosts
+  hosts: docker_hosts
+  become: yes
+
+  tasks:
+    # ============================================================
+    # Section 1: Prerequisites
+    # ============================================================
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+          - gnupg
+        state: present
+        update_cache: yes
+
+    # ============================================================
+    # Section 2: Docker APT Repository
+    # ============================================================
+    - name: Create keyrings directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: Add Docker GPG key
+      ansible.builtin.shell: |
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+        chmod a+r /etc/apt/keyrings/docker.gpg
+      args:
+        creates: /etc/apt/keyrings/docker.gpg
+
+    - name: Add Docker APT repository
+      ansible.builtin.copy:
+        content: |
+          deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable
+        dest: /etc/apt/sources.list.d/docker.list
+        mode: "0644"
+
+    - name: Update apt cache after adding Docker repo
+      ansible.builtin.apt:
+        update_cache: yes
+
+    # ============================================================
+    # Section 3: Install Docker
+    # ============================================================
+    - name: Install Docker CE and plugins
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+
+    # ============================================================
+    # Section 4: Configure
+    # ============================================================
+    - name: Add vlad to docker group
+      ansible.builtin.user:
+        name: vlad
+        groups: docker
+        append: yes
+
+    - name: Enable and start Docker
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Verify Docker installation
+      ansible.builtin.command: docker --version
+      register: docker_version
+      changed_when: false
+
+    - name: Verify Docker Compose installation
+      ansible.builtin.command: docker compose version
+      register: compose_version
+      changed_when: false
+
+    - name: Show installed versions
+      ansible.builtin.debug:
+        msg:
+          - "{{ docker_version.stdout }}"
+          - "{{ compose_version.stdout }}"

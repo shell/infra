@@ -1,0 +1,242 @@
+# =============================================================================
+# Homelab Infrastructure - .gitignore
+# =============================================================================
+
+# =============================================================================
+# SECRETS & CREDENTIALS
+# =============================================================================
+
+# Environment files with secrets (keep .env.example for templates)
+.env
+.envrc
+.env.local
+.env.*.local
+!.env.example
+!.env.enc
+!*.env.enc
+
+# TLS/SSL certificates and keys
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+acme.json
+
+# SSH CA private key (unencrypted - use ca_key.enc instead)
+ansible/ssh-ca/ca_key
+
+# Tailscale ACL (unencrypted - use config.acl.enc instead)
+tailscale/config.acl
+
+# =============================================================================
+# APPLICATION DATA & DATABASES
+# =============================================================================
+
+# SQLite databases
+*.sqlite
+*.sqlite3
+*.db
+
+# PostgreSQL data
+postgres-data/
+pgdata/
+
+# Redis data
+redis-data/
+dump.rdb
+
+# InfluxDB data
+influxdb-data/
+**/influxdb/data/
+**/influxdb/config/
+
+# Prometheus data
+prometheus-data/
+
+# Elasticsearch data
+esdata/
+
+# =============================================================================
+# BACKUP FILES
+# =============================================================================
+
+# Application backups
+*.backup
+*.bak
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.unifi
+*_backup_*
+
+# Sonarr/Radarr/etc backups
+sonarr_backup_*.zip
+radarr_backup_*.zip
+lidarr_backup_*.zip
+prowlarr_backup_*.zip
+
+# =============================================================================
+# RUNTIME & TEMPORARY FILES
+# =============================================================================
+
+# Docker volumes (if mounted locally)
+**/volumes/
+**/appdata/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Log files
+*.log
+logs/
+
+# PID files
+*.pid
+
+# =============================================================================
+# APPLICATION-SPECIFIC
+# =============================================================================
+
+# Homarr
+**/homarr/data/
+**/homarr/appdata/
+**/homarr/icons/
+
+# Traefik (keep config files, exclude certs)
+# Note: config.yml and traefik.yml should be tracked, acme.json should not
+
+# AlertManager (rendered config generated at runtime from .yml.tmpl)
+**/alertmanager/alertmanager.yml
+
+# Paperless-ngx
+**/paperless/data/
+**/paperless/media/
+**/paperless/consume/
+**/paperless/export/
+
+# Jellyfin
+**/jellyfin/config/
+**/jellyfin/cache/
+
+# qBittorrent
+**/qbittorrent/config/
+
+# *arr stack configs (contain API keys after first run)
+**/sonarr/config/
+**/radarr/config/
+**/lidarr/config/
+**/prowlarr/config/
+**/bazarr/config/
+**/readarr/config/
+
+# Tube Archivist
+**/tubearchivist/cache/
+
+# Pi-hole
+**/pihole/etc-pihole/
+**/pihole/etc-dnsmasq.d/
+
+# Uptime Kuma
+**/uptime-kuma/data/
+
+# Grafana
+**/grafana/data/
+
+# =============================================================================
+# IDE & EDITOR
+# =============================================================================
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# JetBrains IDEs
+.idea/
+*.iml
+
+# Vim
+*.swp
+*.swo
+Session.vim
+.netrwhist
+
+# =============================================================================
+# OS-SPECIFIC
+# =============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# =============================================================================
+# MISC
+# =============================================================================
+
+# Scratch/test files
+scratch/
+test/
+tmp/
+
+# Node modules (if any tooling)
+node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+secrets.auto.tfvars
+terraform.tfstate*
+*.tfvars
+*.tfvars.json
+*.tfplan
+tfplan
+
+
+# Agents
+/docs
+.claude/*.local.json
+
+# Local-only folders: ignore the whole folder, not just today's file types
+config-backups/
+terraform/proxmox/
+
+# Cluster admin credentials and key material
+kubeconfig*
+talosconfig
+keys.txt
+*.agekey
+id_rsa*
+id_ed25519*
+!*.pub
+
+# Decrypted twins of SOPS files
+*.dec
+*.dec.*
+*.decrypted*

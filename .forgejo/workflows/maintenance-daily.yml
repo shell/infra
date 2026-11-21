@@ -1,0 +1,19 @@
+name: Maintenance (daily)
+
+on:
+  schedule:
+    - cron: "0 5 * * *"   # Daily 5am UTC — proxmox-health
+
+jobs:
+  proxmox-health:
+    name: Proxmox health
+    runs-on: self-hosted
+    env:
+      SF_TELEGRAM_BOT_TOKEN: ${{ secrets.SF_TELEGRAM_BOT_TOKEN }}
+      SF_TELEGRAM_CHAT_ID: ${{ secrets.SF_TELEGRAM_CHAT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Proxmox health
+        working-directory: ansible
+        run: ansible-playbook playbooks/proxmox-health.yml -e notify_telegram=true

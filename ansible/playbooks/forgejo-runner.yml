@@ -1,0 +1,127 @@
+---
+# Install and register the Forgejo Actions runner on the runner VM (docs/forgejo.md)
+#
+# Forgejo itself is a compose stack (cluster/runner/forgejo, deployed by deploy.yml);
+# this playbook adds the runner as a host systemd service next to it. Registration
+# is offline: the shared secret lives in cluster/runner/forgejo/.env.enc, so
+# re-running is idempotent and rotating the secret is just editing that file.
+#
+# Usage:
+#   ansible-playbook playbooks/forgejo-runner.yml
+#   Upgrade: bump forgejo_runner_version + forgejo_runner_sha256, re-run
+#
+# Run it from the Mac, not from a Forgejo job (a config/binary change restarts
+# forgejo-runner, which would kill the very job running this playbook):
+#   ansible-playbook playbooks/forgejo-runner.yml -e ansible_connection=ssh -e ansible_host=192.168.10.252
+
+- name: Forgejo Actions runner
+  hosts: runner
+  become: no
+  vars:
+    forgejo_runner_version: "13.2.1"
+    # sha256 of forgejo-runner-<version>-linux-amd64 (release .sha256 asset)
+    forgejo_runner_sha256: "bb369fe1ecb50fdc983c0b1d993f19b0920df6e5864511892b3cdbf16d858b34"
+    forgejo_runner_name: nuc-runner
+    forgejo_runner_home: "/home/{{ ansible_user }}/forgejo-runner"
+    forgejo_runner_config: "/home/{{ ansible_user }}/.config/forgejo-runner/config.yml"
+    # Also handed to jobs as the clone URL, so it must work from inside job
+    # containers too (127.0.0.1 would be the container) — LAN IP, no Traefik hop
+    forgejo_url: "http://192.168.10.252:3000/"
+    secret_env_file: "{{ playbook_dir }}/../../cluster/runner/forgejo/.env.enc"
+
+  tasks:
+    # Decrypted on the runner VM itself (it holds the age key), with the
+    # still-encrypted file piped in from the controller. No delegate_to:
+    # localhost, so this works both locally and with -e ansible_connection=ssh.
+    - name: Read runner secret
+      ansible.builtin.shell: |
+        set -o pipefail
+        sops --decrypt --input-type dotenv --output-type dotenv /dev/stdin \
+          | sed -n 's/^FORGEJO_RUNNER_SECRET=//p'
+      args:
+        executable: /bin/bash
+        stdin: "{{ lookup('ansible.builtin.file', secret_env_file) }}"
+      register: runner_secret
+      changed_when: false
+      check_mode: false
+      no_log: true
+
+    - name: Wait for Forgejo
+      ansible.builtin.uri:
+        url: "{{ forgejo_url }}api/healthz"
+        status_code: 200
+      register: forgejo_health
+      until: forgejo_health.status == 200
+      retries: 10
+      delay: 3
+
+    - name: Register runner (idempotent, offline)
+      ansible.builtin.command:
+        cmd: >-
+          docker exec -i -u git forgejo
+          forgejo forgejo-cli actions register
+          --name {{ forgejo_runner_name }}
+          --secret-stdin -
+        stdin: "{{ runner_secret.stdout }}"
+        # Secret must be exactly 40 chars; no trailing newline
+        stdin_add_newline: false
+      register: runner_register
+      changed_when: false
+      no_log: true
+
+    - name: Set runner connection facts
+      ansible.builtin.set_fact:
+        forgejo_runner_uuid: "{{ runner_register.stdout | trim }}"
+        forgejo_runner_secret: "{{ runner_secret.stdout | trim }}"
+      no_log: true
+
+    - name: Create runner directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0700'
+      loop:
+        - "{{ forgejo_runner_home }}"
+        - "{{ forgejo_runner_home }}/work"
+        - "{{ forgejo_runner_config | dirname }}"
+
+    - name: Install forgejo-runner binary
+      ansible.builtin.get_url:
+        url: "https://code.forgejo.org/forgejo/runner/releases/download/v{{ forgejo_runner_version }}/forgejo-runner-{{ forgejo_runner_version }}-linux-amd64"
+        dest: /usr/local/bin/forgejo-runner
+        checksum: "sha256:{{ forgejo_runner_sha256 }}"
+        mode: '0755'
+      become: yes
+      notify: Restart forgejo-runner
+
+    - name: Write runner config
+      ansible.builtin.template:
+        src: forgejo-runner.config.yml.j2
+        dest: "{{ forgejo_runner_config }}"
+        mode: '0600'
+      no_log: true
+      notify: Restart forgejo-runner
+
+    - name: Install systemd unit
+      ansible.builtin.template:
+        src: forgejo-runner.service.j2
+        dest: /etc/systemd/system/forgejo-runner.service
+        mode: '0644'
+      become: yes
+      notify: Restart forgejo-runner
+
+    - name: Enable and start forgejo-runner
+      ansible.builtin.systemd:
+        name: forgejo-runner
+        enabled: yes
+        state: started
+        daemon_reload: yes
+      become: yes
+
+  handlers:
+    - name: Restart forgejo-runner
+      ansible.builtin.systemd:
+        name: forgejo-runner
+        state: restarted
+        daemon_reload: yes
+      become: yes

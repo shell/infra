@@ -1,0 +1,191 @@
+---
+# Deploy Docker Compose services to homelab hosts
+#
+# Usage:
+#   Deploy all:        ansible-playbook playbooks/deploy.yml
+#   Deploy one host:   ansible-playbook playbooks/deploy.yml -l ts-router
+#   Deploy one service: ansible-playbook playbooks/deploy.yml -l servarr -e service=servarr
+#   With sudo password: ansible-playbook playbooks/deploy.yml -K
+
+- name: Deploy Docker Compose services
+  hosts: docker_hosts
+  become: no
+  vars:
+    base_path: "/home/{{ ansible_user }}"
+    repo_cluster_path: "{{ playbook_dir }}/../../cluster"
+
+  tasks:
+    - name: Create Docker networks
+      ansible.builtin.shell: |
+        docker network inspect {{ item }} >/dev/null 2>&1 || docker network create {{ item }}
+      loop: "{{ docker_networks | default([]) }}"
+      register: network_result
+      changed_when: "'Creating' in network_result.stderr or item not in network_result.stdout"
+
+    - name: Create service directories
+      ansible.builtin.file:
+        path: "{{ base_path }}/{{ item }}"
+        state: directory
+        mode: '0755'
+      loop: "{{ docker_compose_dirs }}"
+
+    - name: Set source directory (matches inventory hostname)
+      ansible.builtin.set_fact:
+        source_base: "{{ repo_cluster_path }}/{{ inventory_hostname }}"
+
+    - name: Copy docker-compose files
+      ansible.posix.synchronize:
+        src: "{{ source_base }}/{{ item }}/"
+        dest: "{{ base_path }}/{{ item }}/"
+        rsync_opts:
+          - "--exclude=.gitkeep"
+          - "--exclude=.env.enc"
+          - "--exclude=acme.json"
+          - "--exclude=*.secret.yml"
+      loop: "{{ docker_compose_dirs }}"
+      register: compose_files
+
+    - name: Check for encrypted .env files
+      ansible.builtin.stat:
+        path: "{{ source_base }}/{{ item }}/.env.enc"
+      loop: "{{ docker_compose_dirs }}"
+      register: env_files
+      delegate_to: localhost
+
+    - name: Decrypt and copy .env files
+      ansible.builtin.shell: |
+        sops --decrypt --input-type dotenv --output-type dotenv "{{ source_base }}/{{ item.item }}/.env.enc"
+      loop: "{{ env_files.results }}"
+      when: item.stat.exists
+      register: decrypted_env
+      delegate_to: localhost
+      changed_when: false
+      no_log: true
+
+    - name: Write decrypted .env files to remote
+      ansible.builtin.copy:
+        content: "{{ item.stdout }}"
+        dest: "{{ base_path }}/{{ item.item.item }}/.env"
+        mode: '0600'
+      loop: "{{ decrypted_env.results }}"
+      when: item.stdout is defined
+      no_log: true
+
+    - name: Find encrypted secret config files
+      ansible.builtin.find:
+        paths: "{{ source_base }}"
+        patterns: "*.secret.yml"
+        recurse: yes
+      delegate_to: localhost
+      register: secret_yml_files
+
+    - name: Decrypt secret config files
+      ansible.builtin.shell: |
+        sops --decrypt "{{ item.path }}"
+      loop: "{{ secret_yml_files.files }}"
+      when: secret_yml_files.files | length > 0
+      register: decrypted_secret_yml
+      delegate_to: localhost
+      changed_when: false
+      no_log: true
+
+    - name: Write decrypted secret config files to remote
+      ansible.builtin.copy:
+        content: "{{ item.stdout }}"
+        dest: "{{ base_path }}/{{ item.item.path | regex_replace('^' + (source_base | realpath) + '/', '') }}"
+        mode: '0600'
+      loop: "{{ decrypted_secret_yml.results }}"
+      when: item.stdout is defined
+      no_log: true
+
+    - name: Find compose files
+      ansible.builtin.find:
+        paths: "{{ base_path }}/{{ item }}"
+        patterns:
+          - "compose.yml"
+          - "compose.yaml"
+          - "docker-compose.yml"
+          - "docker-compose.yaml"
+      loop: "{{ docker_compose_dirs }}"
+      register: found_compose_files
+
+    - name: Deploy services with docker compose
+      ansible.builtin.shell: |
+        cd "{{ base_path }}/{{ item.item }}"
+        docker compose pull --quiet
+        docker compose down --remove-orphans 2>/dev/null || true
+        docker compose up -d --remove-orphans
+      loop: "{{ found_compose_files.results }}"
+      when: item.files | length > 0
+      register: deploy_result
+      changed_when: "'Started' in deploy_result.stdout or 'Recreated' in deploy_result.stdout"
+
+    - name: Ensure configured users have Grafana Admin role
+      when: "'grafana' in docker_compose_dirs"
+      block:
+        - name: Wait for Grafana API to be ready
+          ansible.builtin.uri:
+            url: "http://localhost:3000/api/health"
+            status_code: 200
+          register: grafana_health
+          until: grafana_health.status == 200
+          retries: 10
+          delay: 3
+
+        - name: Read Grafana admin password from decrypted .env
+          ansible.builtin.set_fact:
+            grafana_admin_password: >-
+              {{ (decrypted_env.results
+                  | selectattr('item.item', 'equalto', 'grafana')
+                  | map(attribute='stdout') | first)
+                 | regex_search('^GRAFANA_ADMIN_PASSWORD=(.+)$', '\1', multiline=True)
+                 | first }}
+          no_log: true
+
+        # GF_SECURITY_ADMIN_PASSWORD only applies when the DB is first created,
+        # so sync an existing install's admin password when it doesn't match.
+        - name: Check Grafana admin password
+          ansible.builtin.uri:
+            url: "http://localhost:3000/api/user"
+            user: admin
+            password: "{{ grafana_admin_password }}"
+            force_basic_auth: yes
+            status_code: [200, 401]
+          register: grafana_admin_check
+          no_log: true
+
+        - name: Reset Grafana admin password to the one in .env.enc
+          ansible.builtin.command:
+            argv: [docker, exec, -i, grafana, grafana, cli, admin, reset-admin-password, --password-from-stdin]
+            stdin: "{{ grafana_admin_password }}"
+            stdin_add_newline: false
+          when: grafana_admin_check.status == 401
+          no_log: true
+
+        - name: Get Grafana org users
+          ansible.builtin.uri:
+            url: "http://localhost:3000/api/org/users"
+            user: admin
+            password: "{{ grafana_admin_password }}"
+            force_basic_auth: yes
+            return_content: yes
+          register: grafana_org_users
+          no_log: true
+
+        - name: Promote configured users to Admin
+          ansible.builtin.uri:
+            url: "http://localhost:3000/api/org/users/{{ item.userId }}"
+            method: PATCH
+            user: admin
+            password: "{{ grafana_admin_password }}"
+            force_basic_auth: yes
+            body_format: json
+            body:
+              role: Admin
+            status_code: 200
+          loop: "{{ grafana_org_users.json | selectattr('login', 'in', grafana_admin_users | default([])) | selectattr('role', 'ne', 'Admin') | list }}"
+
+# Monitoring agents (beszel-agent, node-exporter) are managed by a role,
+# not per-host compose dirs.
+- name: Provision monitoring agents
+  ansible.builtin.import_playbook: monitoring.yml

@@ -1,0 +1,207 @@
+---
+# Proxmox health checks — SMART, storage, LVM, ZFS, temperatures
+#
+# Usage:
+#   All Proxmox:  ansible-playbook playbooks/proxmox-health.yml
+#   Single host:  ansible-playbook playbooks/proxmox-health.yml -l pve-nuc
+#   With notify:  ansible-playbook playbooks/proxmox-health.yml -e notify_telegram=true
+
+- name: Proxmox storage and hardware health check
+  hosts: proxmox
+  become: no
+  gather_facts: no
+
+  tasks:
+    - name: Skip offline hosts
+      ansible.builtin.meta: end_host
+      when: expected_offline | default(false) | bool
+
+    - name: Gather facts
+      ansible.builtin.setup:
+
+    - name: Initialize warnings list
+      ansible.builtin.set_fact:
+        health_warnings: []
+
+    # --- SMART disk checks ---
+    - name: Check if smartmontools is installed
+      ansible.builtin.shell: which smartctl
+      register: smartctl_check
+      changed_when: false
+      failed_when: false
+
+    - name: Warn if smartmontools missing
+      ansible.builtin.set_fact:
+        health_warnings: "{{ health_warnings + ['smartmontools not installed — install with: apt install smartmontools'] }}"
+      when: smartctl_check.rc != 0
+
+    - name: Scan for disks
+      ansible.builtin.shell: smartctl --scan | awk '{print $1}'
+      register: disk_list
+      changed_when: false
+      failed_when: false
+      when: smartctl_check.rc == 0 and proxmox_health.smart_enabled
+
+    - name: Check SMART health for each disk
+      ansible.builtin.shell: smartctl -H {{ item }} 2>/dev/null | grep -i 'overall-health\|result' | tail -1
+      loop: "{{ disk_list.stdout_lines | default([]) }}"
+      register: smart_results
+      changed_when: false
+      failed_when: false
+      when: smartctl_check.rc == 0 and proxmox_health.smart_enabled
+
+    - name: Flag SMART failures
+      ansible.builtin.set_fact:
+        health_warnings: "{{ health_warnings + ['SMART FAIL on ' + item.item + ': ' + item.stdout] }}"
+      loop: "{{ smart_results.results | default([]) }}"
+      when:
+        - item.stdout is defined
+        - "'PASSED' not in item.stdout"
+
+    # --- Storage pool health ---
+    - name: Check Proxmox storage pools
+      ansible.builtin.shell: pvesm status 2>/dev/null || echo "pvesm not available"
+      register: storage_status
+      changed_when: false
+      failed_when: false
+
+    - name: Parse storage pool usage
+      ansible.builtin.shell: |
+        pvesm status 2>/dev/null | tail -n +2 | while read name type status total used avail pct; do
+          if [ -n "$pct" ] && [ "$pct" != "0%" ]; then
+            used_num=$(echo "$pct" | tr -d '%')
+            free_num=$((100 - used_num))
+            if [ "$free_num" -lt "{{ proxmox_health.disk_space_warn_pct }}" ]; then
+              echo "WARNING: Storage '$name' has only ${free_num}% free (${pct} used)"
+            fi
+          fi
+        done
+      register: storage_warnings
+      changed_when: false
+      failed_when: false
+
+    - name: Flag storage pool warnings
+      ansible.builtin.set_fact:
+        health_warnings: "{{ health_warnings + storage_warnings.stdout_lines }}"
+      when: storage_warnings.stdout_lines | length > 0
+
+    # --- LVM thin pool metadata ---
+    - name: Check LVM thin pool metadata usage
+      ansible.builtin.shell: |
+        lvs --noheadings -o lv_name,metadata_percent --select 'pool_lv=""' 2>/dev/null | while read name pct; do
+          if [ -n "$pct" ]; then
+            pct_int=$(echo "$pct" | cut -d. -f1)
+            if [ "$pct_int" -gt "{{ proxmox_health.lvm_meta_warn_pct }}" ]; then
+              echo "WARNING: LVM thin pool '$name' metadata at ${pct}%"
+            fi
+          fi
+        done
+      register: lvm_warnings
+      changed_when: false
+      failed_when: false
+
+    - name: Flag LVM thin pool warnings
+      ansible.builtin.set_fact:
+        health_warnings: "{{ health_warnings + lvm_warnings.stdout_lines }}"
+      when: lvm_warnings.stdout_lines | length > 0
+
+    # --- ZFS health (conditional) ---
+    - name: Check if ZFS is available
+      ansible.builtin.shell: which zpool
+      register: zfs_check
+      changed_when: false
+      failed_when: false
+
+    - name: Check ZFS pool health
+      ansible.builtin.shell: zpool status -x 2>/dev/null
+      register: zfs_status
+      changed_when: false
+      failed_when: false
+      when: zfs_check.rc == 0
+
+    - name: Flag ZFS pool issues
+      ansible.builtin.set_fact:
+        health_warnings: "{{ health_warnings + ['ZFS: ' + zfs_status.stdout] }}"
+      when:
+        - zfs_check.rc == 0
+        - zfs_status.stdout is defined
+        - zfs_status.stdout | trim | length > 0
+        - "'all pools are healthy' not in zfs_status.stdout"
+
+    - name: Check ZFS scrub age
+      ansible.builtin.shell: |
+        zpool list -Ho name 2>/dev/null | while read pool; do
+          last_scrub=$(zpool status "$pool" 2>/dev/null | grep 'scan:' | grep 'scrub' | grep -oP '\w+ \w+ \d+ \d+:\d+:\d+ \d+' | tail -1)
+          if [ -n "$last_scrub" ]; then
+            scrub_epoch=$(date -d "$last_scrub" +%s 2>/dev/null || echo 0)
+            now_epoch=$(date +%s)
+            age_days=$(( (now_epoch - scrub_epoch) / 86400 ))
+            if [ "$age_days" -gt "{{ proxmox_health.zfs_scrub_interval_days }}" ]; then
+              echo "$pool"
+            fi
+          else
+            echo "$pool"
+          fi
+        done
+      register: scrub_needed
+      changed_when: false
+      failed_when: false
+      when: zfs_check.rc == 0
+
+    - name: Trigger ZFS scrub if overdue
+      ansible.builtin.shell: zpool scrub {{ item }}
+      loop: "{{ scrub_needed.stdout_lines | default([]) }}"
+      when:
+        - zfs_check.rc == 0
+        - scrub_needed.stdout_lines | default([]) | length > 0
+
+    # --- CPU temperature ---
+    - name: Read CPU temperature
+      ansible.builtin.shell: |
+        if [ -f /sys/class/thermal/thermal_zone0/temp ]; then
+          temp=$(cat /sys/class/thermal/thermal_zone0/temp)
+          echo $((temp / 1000))
+        elif command -v sensors &>/dev/null; then
+          sensors 2>/dev/null | grep -oP '\+\d+\.\d+' | head -1 | cut -d. -f1 | tr -d '+'
+        else
+          echo "unknown"
+        fi
+      register: cpu_temp
+      changed_when: false
+      failed_when: false
+
+    - name: Flag high temperature
+      ansible.builtin.set_fact:
+        health_warnings: "{{ health_warnings + ['CPU temperature: ' + cpu_temp.stdout + 'C (threshold: ' + proxmox_health.temp_warn_celsius | string + 'C)'] }}"
+      when:
+        - cpu_temp.stdout != "unknown"
+        - cpu_temp.stdout | int > proxmox_health.temp_warn_celsius
+
+    # --- Summary ---
+    - name: Display health report
+      ansible.builtin.debug:
+        msg:
+          - "=== {{ inventory_hostname }} Health Report ==="
+          - "CPU temp: {{ cpu_temp.stdout | default('unknown') }}C"
+          - "Storage: {{ storage_status.stdout_lines | default([]) }}"
+          - "Warnings: {{ health_warnings | length }}"
+          - "{{ health_warnings if health_warnings | length > 0 else ['All checks passed'] }}"
+
+    - name: Send Telegram alert if warnings found
+      ansible.builtin.uri:
+        url: "{{ telegram.api_url }}/bot{{ telegram.bot_token }}/sendMessage"
+        method: POST
+        body_format: json
+        body:
+          chat_id: "{{ telegram.chat_id }}"
+          text: |
+            Proxmox Health Warnings
+            Host: {{ inventory_hostname }}
+            {% for w in health_warnings %}
+            - {{ w }}
+            {% endfor %}
+          parse_mode: HTML
+        status_code: 200
+      when:
+        - health_warnings | length > 0
+        - notify_telegram | default(false) | bool

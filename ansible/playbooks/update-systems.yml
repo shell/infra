@@ -1,0 +1,128 @@
+---
+# System updates with rolling reboots for Docker hosts
+#
+# Usage:
+#   All hosts:    ansible-playbook playbooks/update-systems.yml -K
+#   Single host:  ansible-playbook playbooks/update-systems.yml -l servarr -K
+#   Dry run:      ansible-playbook playbooks/update-systems.yml -K --check
+#   With notify:  ansible-playbook playbooks/update-systems.yml -K -e notify_telegram=true
+
+- name: Update systems with rolling reboots
+  hosts: docker_hosts
+  become: yes
+  serial: 1
+
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 0
+
+    - name: Upgrade packages (safe)
+      ansible.builtin.apt:
+        upgrade: safe
+      register: apt_upgrade
+      when: not (system_update.allow_dist_upgrade | bool)
+
+    - name: Upgrade packages (dist)
+      ansible.builtin.apt:
+        upgrade: dist
+      register: apt_dist_upgrade
+      when: system_update.allow_dist_upgrade | bool
+
+    - name: Remove orphaned packages
+      ansible.builtin.apt:
+        autoremove: yes
+        purge: yes
+
+    - name: Check if reboot is required
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_required
+
+    - name: Display upgrade summary
+      ansible.builtin.debug:
+        msg:
+          - "Host: {{ inventory_hostname }}"
+          - "Reboot required: {{ reboot_required.stat.exists }}"
+
+    # --- Reboot sequence (only if needed) ---
+    - name: Stop docker compose stacks before reboot
+      ansible.builtin.shell: |
+        cd "{{ base_path }}/{{ item }}"
+        docker compose down
+      loop: "{{ docker_compose_dirs }}"
+      become: no
+      when: reboot_required.stat.exists
+
+    - name: Reboot the system
+      ansible.builtin.reboot:
+        reboot_timeout: "{{ system_update.reboot_timeout }}"
+        pre_reboot_delay: "{{ system_update.pre_reboot_delay }}"
+        msg: "Ansible maintenance reboot"
+      when: reboot_required.stat.exists
+
+    - name: Wait for connection after reboot
+      ansible.builtin.wait_for_connection:
+        timeout: "{{ system_update.reboot_timeout }}"
+      when: reboot_required.stat.exists
+
+    - name: Wait for Docker daemon
+      ansible.builtin.shell: docker info
+      register: docker_ready
+      until: docker_ready.rc == 0
+      retries: 30
+      delay: 5
+      changed_when: false
+      become: no
+      when: reboot_required.stat.exists
+
+    - name: Start docker compose stacks after reboot
+      ansible.builtin.shell: |
+        cd "{{ base_path }}/{{ item }}"
+        docker compose up -d
+      loop: "{{ docker_compose_dirs }}"
+      become: no
+      when: reboot_required.stat.exists
+
+    - name: Wait for containers to stabilize
+      ansible.builtin.pause:
+        seconds: "{{ system_update.health_check_delay }}"
+      when: reboot_required.stat.exists
+
+    - name: Verify containers are running
+      ansible.builtin.shell: |
+        unhealthy=$(docker ps --filter "health=unhealthy" --format "{{ '{{' }}.Names{{ '}}' }}" 2>/dev/null)
+        exited=$(docker ps -a --filter "status=exited" --format "{{ '{{' }}.Names{{ '}}' }}" 2>/dev/null)
+        if [ -n "$unhealthy" ]; then
+          echo "Unhealthy containers: $unhealthy"
+          exit 1
+        fi
+        if [ -n "$exited" ]; then
+          echo "WARNING: Exited containers: $exited"
+        fi
+        docker ps --format "table {{ '{{' }}.Names{{ '}}' }}\t{{ '{{' }}.Status{{ '}}' }}" | head -20
+      register: container_check
+      become: no
+      when: reboot_required.stat.exists
+      changed_when: false
+
+    - name: Display post-reboot container status
+      ansible.builtin.debug:
+        msg: "{{ container_check.stdout_lines }}"
+      when: reboot_required.stat.exists and container_check.stdout_lines is defined
+
+    - name: Send Telegram notification
+      ansible.builtin.uri:
+        url: "{{ telegram.api_url }}/bot{{ telegram.bot_token }}/sendMessage"
+        method: POST
+        body_format: json
+        body:
+          chat_id: "{{ telegram.chat_id }}"
+          text: |
+            System Update: {{ inventory_hostname }}
+            Reboot: {{ 'yes' if reboot_required.stat.exists else 'no' }}
+          parse_mode: HTML
+        status_code: 200
+      become: no
+      when: notify_telegram | default(false) | bool

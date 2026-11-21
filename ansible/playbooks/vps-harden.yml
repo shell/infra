@@ -1,0 +1,208 @@
+---
+# Idempotent VPS hardening — run anytime to enforce config and apply updates
+#
+# Usage:
+#   All VPS:      ansible-playbook playbooks/vps-harden.yml
+#   Single host:  ansible-playbook playbooks/vps-harden.yml -l srv1517572
+#   Dry run:      ansible-playbook playbooks/vps-harden.yml -l srv1517572 --check
+
+- name: Harden VPS hosts
+  hosts: vps_hosts
+  become: yes
+
+  tasks:
+    # ============================================================
+    # Section 1: System Update
+    # ============================================================
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Upgrade all packages
+      ansible.builtin.apt:
+        upgrade: dist
+        autoremove: yes
+
+    # ============================================================
+    # Section 2: Ensure base packages installed
+    # ============================================================
+    - name: Install base packages
+      ansible.builtin.apt:
+        name: "{{ vps_base_packages }}"
+        state: present
+
+    # ============================================================
+    # Section 3: SSH Hardening
+    # ============================================================
+    - name: Ensure sshd privilege separation directory exists
+      ansible.builtin.file:
+        path: /run/sshd
+        state: directory
+        mode: "0755"
+        owner: root
+        group: root
+
+    - name: Set SSH port
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?Port '
+        line: "Port {{ vps_ssh_port }}"
+        state: present
+        validate: '/usr/sbin/sshd -t -f %s'
+      notify: Restart sshd
+
+    - name: Disable SSH root login
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PermitRootLogin'
+        line: "PermitRootLogin no"
+        state: present
+        validate: '/usr/sbin/sshd -t -f %s'
+      notify: Restart sshd
+
+    - name: Disable SSH password authentication
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: "PasswordAuthentication no"
+        state: present
+        validate: '/usr/sbin/sshd -t -f %s'
+      notify: Restart sshd
+
+    - name: Enable SSH public key authentication
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PubkeyAuthentication'
+        line: "PubkeyAuthentication yes"
+        state: present
+        validate: '/usr/sbin/sshd -t -f %s'
+      notify: Restart sshd
+
+    - name: Set SSH MaxAuthTries
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?MaxAuthTries'
+        line: "MaxAuthTries {{ vps_ssh_max_auth_tries }}"
+        state: present
+        validate: '/usr/sbin/sshd -t -f %s'
+      notify: Restart sshd
+
+    - name: Set SSH LoginGraceTime
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?LoginGraceTime'
+        line: "LoginGraceTime {{ vps_ssh_login_grace_time }}"
+        state: present
+        validate: '/usr/sbin/sshd -t -f %s'
+      notify: Restart sshd
+
+    # ============================================================
+    # Section 4: UFW Firewall
+    # ============================================================
+    - name: Set UFW default deny incoming
+      ansible.builtin.shell: ufw default deny incoming
+      register: ufw_deny
+      changed_when: "'updated' in ufw_deny.stdout | lower"
+
+    - name: Set UFW default allow outgoing
+      ansible.builtin.shell: ufw default allow outgoing
+      register: ufw_allow
+      changed_when: "'updated' in ufw_allow.stdout | lower"
+
+    - name: Allow default UFW ports
+      ansible.builtin.shell: ufw allow "{{ item.port }}/{{ item.proto }}" comment "{{ item.comment }}"
+      loop: "{{ vps_ufw_default_ports }}"
+      register: ufw_defaults
+      changed_when: "'added' in ufw_defaults.stdout | lower"
+
+    - name: Allow per-host extra UFW ports
+      ansible.builtin.shell: ufw allow "{{ item.port }}/{{ item.proto }}" comment "{{ item.comment }}"
+      loop: "{{ vps_ufw_extra_ports }}"
+      register: ufw_extra
+      changed_when: "'added' in ufw_extra.stdout | lower"
+      when: vps_ufw_extra_ports | length > 0
+
+    - name: Enable UFW
+      ansible.builtin.shell: ufw --force enable
+      register: ufw_enable
+      changed_when: "'active' in ufw_enable.stdout and 'already' not in ufw_enable.stdout"
+
+    # ============================================================
+    # Section 5: Fail2ban
+    # ============================================================
+    - name: Configure fail2ban jail
+      ansible.builtin.template:
+        src: vps-fail2ban-jail.local.j2
+        dest: /etc/fail2ban/jail.local
+        mode: '0644'
+      notify: Restart fail2ban
+
+    - name: Enable and start fail2ban
+      ansible.builtin.service:
+        name: fail2ban
+        state: started
+        enabled: yes
+
+    # ============================================================
+    # Section 6: Unattended Upgrades
+    # ============================================================
+    - name: Configure unattended-upgrades for security only
+      ansible.builtin.copy:
+        content: |
+          Unattended-Upgrade::Allowed-Origins {
+              "${distro_id}:${distro_codename}-security";
+          };
+          Unattended-Upgrade::Automatic-Reboot "false";
+          Unattended-Upgrade::Remove-Unused-Dependencies "true";
+        dest: /etc/apt/apt.conf.d/50unattended-upgrades
+        mode: '0644'
+
+    - name: Enable auto-updates timer
+      ansible.builtin.copy:
+        content: |
+          APT::Periodic::Update-Package-Lists "1";
+          APT::Periodic::Unattended-Upgrade "1";
+        dest: /etc/apt/apt.conf.d/20auto-upgrades
+        mode: '0644'
+
+    # ============================================================
+    # Section 7: MOTD Dashboard
+    # ============================================================
+    - name: Disable default Ubuntu MOTD scripts
+      ansible.builtin.file:
+        path: "/etc/update-motd.d/{{ item }}"
+        mode: "0644"
+      loop: "{{ vps_motd_disable_defaults }}"
+      failed_when: false
+
+    - name: Deploy custom MOTD dashboard
+      ansible.builtin.template:
+        src: vps-motd-dashboard.sh.j2
+        dest: /etc/update-motd.d/01-dashboard
+        mode: "0755"
+        owner: root
+        group: root
+
+    # ============================================================
+    # Section 8: Sudoers for fail2ban-client (MOTD)
+    # ============================================================
+    - name: Allow vlad to run fail2ban-client without password
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/vlad-fail2ban
+        content: "vlad ALL=(ALL) NOPASSWD: /usr/bin/fail2ban-client\n"
+        mode: "0440"
+        owner: root
+        group: root
+        validate: visudo -cf %s
+
+  handlers:
+    - name: Restart sshd
+      ansible.builtin.service:
+        name: ssh
+        state: restarted
+
+    - name: Restart fail2ban
+      ansible.builtin.service:
+        name: fail2ban
+        state: restarted

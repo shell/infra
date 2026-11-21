@@ -1,0 +1,44 @@
+---
+# Monitoring agents deployed by playbooks/monitoring.yml (roles/monitoring_agents)
+# as native systemd services, using Galaxy collections pinned in
+# ansible/requirements.yml.
+#
+# Override per host in host_vars/<host>.yml, e.g. to skip an agent:
+#   monitoring_agents: [node_exporter]
+
+monitoring_agents:
+  - beszel_agent
+  - node_exporter
+
+# --- beszel_agent (community.beszel.agent) ---
+beszel_agent_version: v0.21.2
+beszel_hub_url: http://192.168.10.230:8090
+# Report Docker container stats (adds the agent user to the docker group)
+beszel_agent_docker_stats: true
+beszel_agent_extra_filesystems: []
+# Extra groups for the agent user (e.g. video/render for GPU access)
+beszel_agent_extra_groups: []
+# GPUs: [{path: /dev/dri/card0, type: intel|nvidia|amd}] (adds caps + DeviceAllow)
+beszel_agent_gpus: []
+# Applied only when an intel GPU is listed (Ubuntu default 4 blocks CAP_PERFMON)
+beszel_agent_perf_event_paranoid: 2
+# Disks for S.M.A.R.T: [/dev/sda, ...]; installs smartmontools, adds caps
+beszel_agent_smart_disks: []
+# Extra device access: [{device: /dev/xyz, mode: r|rw}]
+beszel_agent_additional_devices: []
+# Where the old Docker agent kept its fingerprint (migrated once)
+beszel_agent_legacy_data_dir: "/home/{{ ansible_user }}/beszel/beszel_agent_data"
+
+# --- node_exporter (prometheus.prometheus.node_exporter) ---
+node_exporter_version: 1.12.1
+node_exporter_port: 9100
+# Role defaults (systemd, textfile) plus a filesystem mount exclusion. The
+# regex is node_exporter's built-in default with run/user/.+ added: /run/user/<uid>
+# is a 0700 per-login tmpfs that the node-exp user can't statfs, which raised
+# HostFilesystemDeviceError whenever root logged in to pve-nuc.
+node_exporter_enabled_collectors:
+  - systemd
+  - textfile:
+      directory: "{{ node_exporter_textfile_dir }}"
+  - filesystem:
+      mount-points-exclude: "^/(dev|proc|run/credentials/.+|run/user/.+|sys|var/lib/docker/.+|var/lib/containers/storage/.+)($|/)"

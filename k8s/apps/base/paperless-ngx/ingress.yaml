@@ -1,0 +1,20 @@
+# Reached as https://paperless.sf.penk.in: ts-router Traefik terminates TLS
+# and forwards to the cluster Traefik (192.168.10.240) with the Host header.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: paperless-ngx
+  namespace: apps-internal
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: paperless.sf.penk.in
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: paperless-ngx
+                port:
+                  name: http

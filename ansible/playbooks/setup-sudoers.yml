@@ -1,0 +1,19 @@
+---
+# Configure passwordless sudo for the ansible user on docker hosts
+#
+# Usage:
+#   ansible-playbook playbooks/setup-sudoers.yml -K
+
+- name: Setup passwordless sudo for ansible user
+  hosts: docker_hosts
+  become: yes
+
+  tasks:
+    - name: Add passwordless sudo for {{ ansible_user }}
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/{{ ansible_user }}
+        content: "{{ ansible_user }} ALL=(ALL) NOPASSWD:ALL\n"
+        mode: "0440"
+        owner: root
+        group: root
+        validate: visudo -cf %s

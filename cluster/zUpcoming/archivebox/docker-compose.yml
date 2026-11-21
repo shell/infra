@@ -1,0 +1,17 @@
+services:
+  archivebox:
+    image: nikisweeting/archivebox:latest
+    command: server 0.0.0.0:8080
+    stdin_open: true
+    tty: true
+    container_name: archivebox
+    environment:
+      - USE_COLOR=True
+      - SHOW_PROGRESS=False
+      - TIMEOUT=120
+      - MEDIA_TIMEOUT=300
+    volumes:
+      - /home/vlad/webarchive/archivebox/data:/data
+    ports:
+      - 8008:8080
+    restart: unless-stopped

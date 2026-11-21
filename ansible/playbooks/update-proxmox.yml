@@ -1,0 +1,128 @@
+---
+# Proxmox host updates — apt dist-upgrade, repo checks, reboot notification
+#
+# Usage:
+#   All Proxmox:  ansible-playbook playbooks/update-proxmox.yml
+#   Single host:  ansible-playbook playbooks/update-proxmox.yml -l pve-nuc
+#   With notify:  ansible-playbook playbooks/update-proxmox.yml -e notify_telegram=true
+
+- name: Update Proxmox hosts
+  hosts: proxmox
+  become: no
+  serial: 1
+
+  tasks:
+    - name: Skip offline hosts
+      ansible.builtin.meta: end_host
+      when: expected_offline | default(false) | bool
+
+    - name: Gather facts
+      ansible.builtin.setup:
+
+    - name: Check repository configuration
+      ansible.builtin.shell: |
+        warnings=""
+        # Check for enterprise repo without subscription
+        if [ -f /etc/apt/sources.list.d/pve-enterprise.list ]; then
+          if grep -q "^deb" /etc/apt/sources.list.d/pve-enterprise.list 2>/dev/null; then
+            if [ ! -f /etc/subscription ]; then
+              warnings="${warnings}Enterprise repo enabled without subscription. "
+            fi
+          fi
+        fi
+        # Check community repo exists
+        if ! grep -rq "pve-no-subscription" /etc/apt/sources.list /etc/apt/sources.list.d/ 2>/dev/null; then
+          warnings="${warnings}Community (no-subscription) repo not found. "
+        fi
+        if [ -n "$warnings" ]; then
+          echo "WARNINGS: $warnings"
+        else
+          echo "OK: Repository configuration looks good"
+        fi
+      register: repo_check
+      changed_when: false
+      when: proxmox_update.check_repo_config | bool
+
+    - name: Display repo check results
+      ansible.builtin.debug:
+        msg: "{{ repo_check.stdout }}"
+      when: proxmox_update.check_repo_config | bool
+
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 0
+
+    - name: Upgrade packages (dist-upgrade)
+      ansible.builtin.apt:
+        upgrade: dist
+      register: apt_upgrade
+      when: proxmox_update.dist_upgrade | bool
+
+    - name: Upgrade packages (safe)
+      ansible.builtin.apt:
+        upgrade: safe
+      register: apt_safe_upgrade
+      when: not (proxmox_update.dist_upgrade | bool)
+
+    - name: Remove orphaned packages
+      ansible.builtin.apt:
+        autoremove: yes
+        purge: yes
+
+    - name: Check if reboot is required (file)
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_file
+
+    - name: Check if reboot is required (kernel)
+      ansible.builtin.shell: |
+        running=$(uname -r)
+        installed=$(dpkg --list 'pve-kernel-*' 2>/dev/null | grep '^ii' | awk '{print $2}' | sort -V | tail -1 | sed 's/pve-kernel-//')
+        if [ "$running" != "$installed" ] && [ -n "$installed" ]; then
+          echo "yes"
+        else
+          echo "no"
+        fi
+      register: kernel_check
+      changed_when: false
+
+    - name: Set reboot required fact
+      ansible.builtin.set_fact:
+        reboot_needed: "{{ reboot_file.stat.exists or kernel_check.stdout == 'yes' }}"
+
+    - name: Get Proxmox version
+      ansible.builtin.shell: pveversion 2>/dev/null || echo "pveversion not available"
+      register: pve_version
+      changed_when: false
+
+    - name: Check cluster status
+      ansible.builtin.shell: pvecm status 2>/dev/null || echo "Not in a cluster"
+      register: cluster_status
+      changed_when: false
+
+    - name: Display update summary
+      ansible.builtin.debug:
+        msg:
+          - "=== {{ inventory_hostname }} Update Summary ==="
+          - "Version: {{ pve_version.stdout }}"
+          - "Reboot needed: {{ reboot_needed }}"
+          - "Cluster: {{ cluster_status.stdout_lines | first | default('Unknown') }}"
+
+    - name: Send Telegram notification if reboot needed
+      ansible.builtin.uri:
+        url: "{{ telegram.api_url }}/bot{{ telegram.bot_token }}/sendMessage"
+        method: POST
+        body_format: json
+        body:
+          chat_id: "{{ telegram.chat_id }}"
+          text: |
+            Proxmox Update: {{ inventory_hostname }}
+            Version: {{ pve_version.stdout }}
+            Reboot required: {{ reboot_needed }}
+            Manual reboot needed — Proxmox hosts are never auto-rebooted.
+          parse_mode: HTML
+        status_code: 200
+      when:
+        - reboot_needed | bool
+        - notify_telegram | default(false) | bool

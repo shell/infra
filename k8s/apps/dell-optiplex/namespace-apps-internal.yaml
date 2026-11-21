@@ -1,0 +1,9 @@
+# LAN-only apps (reached via ts-router Traefik on *.sf.penk.in), as opposed
+# to `apps`, which holds internet-facing ones.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: apps-internal
+  labels:
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/enforce-version: latest

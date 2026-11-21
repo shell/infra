@@ -1,0 +1,11 @@
+---
+# pve-nuc — Proxmox VE host (no Docker)
+
+# S.M.A.R.T for both physical disks (was a manual drop-in before Ansible).
+# /dev/nvme0 is the NVMe controller node smartctl talks to.
+beszel_agent_smart_disks:
+  - /dev/sda
+  - /dev/nvme0n1
+beszel_agent_additional_devices:
+  - device: /dev/nvme0
+    mode: r

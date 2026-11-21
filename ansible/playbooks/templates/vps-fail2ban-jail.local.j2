@@ -1,0 +1,11 @@
+[DEFAULT]
+backend = {{ vps_fail2ban_backend }}
+bantime = {{ vps_fail2ban_bantime }}
+findtime = {{ vps_fail2ban_findtime }}
+maxretry = {{ vps_fail2ban_maxretry }}
+ignoreip = {{ vps_fail2ban_ignoreip }}
+
+[sshd]
+enabled = true
+port = {{ vps_ssh_port }}
+filter = sshd

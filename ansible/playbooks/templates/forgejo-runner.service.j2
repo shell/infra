@@ -1,0 +1,20 @@
+[Unit]
+Description=Forgejo Actions runner
+Documentation=https://forgejo.org/docs/latest/admin/actions/
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{ ansible_user }}
+WorkingDirectory={{ forgejo_runner_home }}
+ExecStart=/usr/local/bin/forgejo-runner daemon -c {{ forgejo_runner_config }}
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=/home/{{ ansible_user }}
+Restart=on-failure
+RestartSec=10
+# Let a running job (e.g. a deploy that restarts Forgejo) finish on stop
+TimeoutStopSec=300
+
+[Install]
+WantedBy=multi-user.target

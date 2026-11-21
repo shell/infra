@@ -1,0 +1,105 @@
+---
+# Host housekeeping — journal trimming, apt cache, tmp files, old kernels
+#
+# Usage:
+#   All hosts:    ansible-playbook playbooks/host-cleanup.yml -K
+#   Single host:  ansible-playbook playbooks/host-cleanup.yml -l servarr -K
+#   With notify:  ansible-playbook playbooks/host-cleanup.yml -K -e notify_telegram=true
+
+- name: Host cleanup and disk reclamation
+  hosts: docker_hosts
+  become: yes
+
+  tasks:
+    - name: Capture disk space before cleanup
+      ansible.builtin.shell: df -h / | tail -1 | awk '{print $4}'
+      register: disk_before
+      changed_when: false
+
+    - name: Trim journal logs by age
+      ansible.builtin.shell: journalctl --vacuum-time={{ host_cleanup.journal_max_age }}
+      register: journal_vacuum_time
+      changed_when: "'Vacuuming done' in journal_vacuum_time.stdout"
+
+    - name: Trim journal logs by size
+      ansible.builtin.shell: journalctl --vacuum-size={{ host_cleanup.journal_max_size }}
+      register: journal_vacuum_size
+      changed_when: "'Vacuuming done' in journal_vacuum_size.stdout"
+
+    - name: Clean apt cache
+      ansible.builtin.apt:
+        autoclean: yes
+
+    - name: Remove orphaned packages
+      ansible.builtin.apt:
+        autoremove: yes
+        purge: yes
+
+    - name: Delete old temp files from /tmp
+      ansible.builtin.shell: find /tmp -type f -atime +{{ host_cleanup.tmp_max_age_days }} -delete 2>/dev/null || true
+      register: tmp_clean
+      changed_when: false
+
+    - name: Delete old temp files from /var/tmp
+      ansible.builtin.shell: find /var/tmp -type f -atime +{{ host_cleanup.tmp_max_age_days }} -delete 2>/dev/null || true
+      register: var_tmp_clean
+      changed_when: false
+
+    - name: List installed kernels
+      ansible.builtin.shell: dpkg --list 'linux-image-*' | grep '^ii' | awk '{print $2}' | grep -v "{{ ansible_kernel }}" | head -n -{{ host_cleanup.keep_kernels - 1 }}
+      register: old_kernels
+      changed_when: false
+      failed_when: false
+
+    - name: Remove old kernels
+      ansible.builtin.apt:
+        name: "{{ old_kernels.stdout_lines }}"
+        state: absent
+        purge: yes
+      when: old_kernels.stdout_lines | length > 0
+
+    - name: Check Docker log rotation config
+      ansible.builtin.shell: |
+        if [ -f /etc/docker/daemon.json ]; then
+          grep -q '"max-size"' /etc/docker/daemon.json && echo "configured" || echo "missing"
+        else
+          echo "missing"
+        fi
+      register: docker_log_config
+      changed_when: false
+      become: no
+
+    - name: Warn if Docker log rotation not configured
+      ansible.builtin.debug:
+        msg: "WARNING: Docker log rotation not configured in /etc/docker/daemon.json — configure max-size and max-file manually"
+      when: docker_log_config.stdout == "missing"
+
+    - name: Capture disk space after cleanup
+      ansible.builtin.shell: df -h / | tail -1 | awk '{print $4}'
+      register: disk_after
+      changed_when: false
+
+    - name: Display cleanup summary
+      ansible.builtin.debug:
+        msg:
+          - "Host: {{ inventory_hostname }}"
+          - "Disk free before: {{ disk_before.stdout }}"
+          - "Disk free after:  {{ disk_after.stdout }}"
+
+    - name: Send Telegram summary
+      ansible.builtin.uri:
+        url: "{{ telegram.api_url }}/bot{{ telegram.bot_token }}/sendMessage"
+        method: POST
+        body_format: json
+        body:
+          chat_id: "{{ telegram.chat_id }}"
+          text: |
+            Host Cleanup Complete
+            {% for host in ansible_play_hosts %}
+            {{ host }}: {{ hostvars[host].disk_before.stdout }} -> {{ hostvars[host].disk_after.stdout }} free
+            {% endfor %}
+          parse_mode: HTML
+        status_code: 200
+      run_once: true
+      become: no
+      when: notify_telegram | default(false) | bool

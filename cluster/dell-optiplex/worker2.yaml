@@ -1,0 +1,95 @@
+version: v1alpha1
+debug: false
+persist: true
+machine:
+    type: worker
+    token: ENC[AES256_GCM,data:2jn2tHrMNm0FBmT39JoaKb+7gsOwq8I=,iv:+TMwD/Mt+C7TEQAYSjdsrm2cDKCuBAj9WujC/DPengc=,tag:sDMO3tRHswbMj5vgCMM2eA==,type:str]
+    ca:
+        crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJQakNCOGFBREFnRUNBaEJKN2w1LzAvakhyUVkvckRmUkU4NXRNQVVHQXl0bGNEQVFNUTR3REFZRFZRUUsKRXdWMFlXeHZjekFlRncweU5qQTJNamd5TXpBeU1qVmFGdzB6TmpBMk1qVXlNekF5TWpWYU1CQXhEakFNQmdOVgpCQW9UQlhSaGJHOXpNQ293QlFZREsyVndBeUVBbEVQNGJrb1JTNVFIOUZRL3Y5dWpHS0JoQ2w4QXp4WHlGSFZPCmpuZFZNLzJqWVRCZk1BNEdBMVVkRHdFQi93UUVBd0lDaERBZEJnTlZIU1VFRmpBVUJnZ3JCZ0VGQlFjREFRWUkKS3dZQkJRVUhBd0l3RHdZRFZSMFRBUUgvQkFVd0F3RUIvekFkQmdOVkhRNEVGZ1FVTEkydXhSWHc0UGJtWWMvSQpzOGxTM3M3cTJYZ3dCUVlESzJWd0EwRUFXWFFoaThQUmxnbVN2eUhHcGpOc2tOcFJTY2VsNC92K1c0L1Fta3VoCis4V29ZSnNaR1N3UjBzV3dycmtPUmpIY2J5Ny85bDB1aVJyUGZLZ0FIT3FCQ3c9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+        key: ""
+    certSANs: []
+    kubelet:
+        image: ghcr.io/siderolabs/kubelet:v1.36.2
+        extraMounts:
+            - destination: /var/mnt/longhorn
+              type: bind
+              source: /var/mnt/longhorn
+              options:
+                - bind
+                - rshared
+                - rw
+        defaultRuntimeSeccompProfileEnabled: true
+        disableManifestsDirectory: true
+    disks:
+        - device: /dev/sda
+          partitions:
+            - mountpoint: /var/mnt/longhorn
+    install:
+        disk: /dev/sdb
+        image: factory.talos.dev/metal-installer/df278f2dd3d36e933b83a5b49ebe8de4871fa900efb4ee59e9053180d92b32dd:v1.13.5
+        wipe: false
+        grubUseUKICmdline: true
+    features:
+        diskQuotaSupport: true
+        kubePrism:
+            enabled: true
+            port: 7445
+        hostDNS:
+            enabled: true
+            forwardKubeDNSToHost: true
+cluster:
+    id: hLNFgF-7jbMsEraNH8M4j2pDAoHyaeppy1aVKXyCU-U=
+    secret: ENC[AES256_GCM,data:uPp4v1lpUpj+Dev8HyKshArHOVrQus4L1b0odT+hC+zU6wduLrcPlDGihys=,iv:U0/Cd1yB1G6xmIo/cISlpZpqq8S/KVTDg4eWXay/G68=,tag:NpO7KQnbo5X4knV4F9c7AA==,type:str]
+    controlPlane:
+        endpoint: https://192.168.10.20:6443
+    clusterName: dell
+    network:
+        dnsDomain: cluster.local
+        podSubnets:
+            - 10.244.0.0/16
+        serviceSubnets:
+            - 10.96.0.0/12
+    token: ENC[AES256_GCM,data:I+s0NlT+qZc2ayh1g95vwrWZ/BmYRNE=,iv:vnBvl62NcanpDTcmNTJt0rBaj4RiMiDdzTHnXFE6DzI=,tag:kch18797VqeiUlWPtU2NLw==,type:str]
+    ca:
+        crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJpakNDQVMrZ0F3SUJBZ0lRRFBNbFVERm9JZC9vUmFOUCtnNzdvakFLQmdncWhrak9QUVFEQWpBVk1STXcKRVFZRFZRUUtFd3ByZFdKbGNtNWxkR1Z6TUI0WERUSTJNRFl5T0RJek1ESXlOVm9YRFRNMk1EWXlOVEl6TURJeQpOVm93RlRFVE1CRUdBMVVFQ2hNS2EzVmlaWEp1WlhSbGN6QlpNQk1HQnlxR1NNNDlBZ0VHQ0NxR1NNNDlBd0VICkEwSUFCQkNINm1LV2czMHNpQnliZ0lCS21wNzVTbk8xVkpnMTdURVZJNmhpREp3aEsyZmFFZGNUemR0OUtGQnMKcG5YbDVFa3NHTmJyUWc3NHlDNEh2Z3FlaGl1allUQmZNQTRHQTFVZER3RUIvd1FFQXdJQ2hEQWRCZ05WSFNVRQpGakFVQmdnckJnRUZCUWNEQVFZSUt3WUJCUVVIQXdJd0R3WURWUjBUQVFIL0JBVXdBd0VCL3pBZEJnTlZIUTRFCkZnUVV4UytmMDJNUVlEZ1FiNGhlODRpaUxab1NzRTR3Q2dZSUtvWkl6ajBFQXdJRFNRQXdSZ0loQVBlNWV0ZmUKVXJtVDFIQU4xM0hOQUYrang2UlU4YnNkekRIRXVxTGpoQ0drQWlFQW9Xd2RXd2w5SlhueUxxU2I1NXBzdzVIMwpJYjJneWVmTW0yYW5FMlZsenBRPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+        key: ""
+    discovery:
+        enabled: true
+        registries:
+            kubernetes:
+                disabled: true
+            service: {}
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBjSE9ITm1RN2NLSWtmV1pG
+            WXZ2K2NSM2lGeHZWM1UrY1pteldab2JNckhvClVBVmJrRGE5ZnhIaXZYbzROWTFJ
+            NXc4UXA3YUlMb2VzT0M5UHNubUJZOHcKLS0tIGd2SDNGcVZsOXFYazVQSFQ2Tm82
+            S3NoQ1ZTdHR0dld1VGcySVdUSk5NMXcKjOmOXh2vjStZ81RoDb1XIDZoc3sDoH0h
+            H5z+EZzam9wcK52zI817FqCHPeuLQdjY9YYddmGDbR3e7n9QOx411g==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1drn9f3pzvgxfjs2y22f6fr47ctd32q7k0ul075xxyfnaqczxygts7wknfj
+    encrypted_regex: ^(key|secret|token|secretboxEncryptionSecret)$
+    lastmodified: "2026-06-29T00:44:57Z"
+    mac: ENC[AES256_GCM,data:0g2K5qpIsW/vJ8ANw42Y6TVR4OUJPpPcGb5jIIlKwKwhD6akkorTHZ9S0CaF3z7suToxcUEqW2XcoqAC+1EZtpLqSicaSUiBfavyVmhxY0l8UaowWjTt2N5ZlqSsTlsETOZt9xJccVCBE3vQ0x5nhLCfP7cTW3SkqE62nX0ihVU=,iv:WRkPLKgZ6Mh0VWzXsrgUe4/tMcJgK3HJr1KiTsVw+fs=,tag:3SAmGe9KYMrnWAj3h7fdJg==,type:str]
+    version: 3.13.1
+---
+apiVersion: v1alpha1
+kind: HostnameConfig
+hostname: diffler
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBjSE9ITm1RN2NLSWtmV1pG
+            WXZ2K2NSM2lGeHZWM1UrY1pteldab2JNckhvClVBVmJrRGE5ZnhIaXZYbzROWTFJ
+            NXc4UXA3YUlMb2VzT0M5UHNubUJZOHcKLS0tIGd2SDNGcVZsOXFYazVQSFQ2Tm82
+            S3NoQ1ZTdHR0dld1VGcySVdUSk5NMXcKjOmOXh2vjStZ81RoDb1XIDZoc3sDoH0h
+            H5z+EZzam9wcK52zI817FqCHPeuLQdjY9YYddmGDbR3e7n9QOx411g==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1drn9f3pzvgxfjs2y22f6fr47ctd32q7k0ul075xxyfnaqczxygts7wknfj
+    encrypted_regex: ^(key|secret|token|secretboxEncryptionSecret)$
+    lastmodified: "2026-06-29T00:44:57Z"
+    mac: ENC[AES256_GCM,data:0g2K5qpIsW/vJ8ANw42Y6TVR4OUJPpPcGb5jIIlKwKwhD6akkorTHZ9S0CaF3z7suToxcUEqW2XcoqAC+1EZtpLqSicaSUiBfavyVmhxY0l8UaowWjTt2N5ZlqSsTlsETOZt9xJccVCBE3vQ0x5nhLCfP7cTW3SkqE62nX0ihVU=,iv:WRkPLKgZ6Mh0VWzXsrgUe4/tMcJgK3HJr1KiTsVw+fs=,tag:3SAmGe9KYMrnWAj3h7fdJg==,type:str]
+    version: 3.13.1

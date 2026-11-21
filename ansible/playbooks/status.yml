@@ -1,0 +1,42 @@
+---
+# Check status of all Docker services
+#
+# Usage:
+#   ansible-playbook playbooks/status.yml
+
+- name: Check Docker service status
+  hosts: docker_hosts
+  become: no  # Docker commands work without sudo if user is in docker group
+  gather_facts: no
+
+  tasks:
+    - name: Get running containers
+      ansible.builtin.shell: |
+        docker ps --format "table {{'{{'}}.Names{{'}}'}}\t{{'{{'}}.Status{{'}}'}}\t{{'{{'}}.Ports{{'}}'}}" | head -20
+      register: docker_ps
+      changed_when: false
+
+    - name: Display running containers
+      ansible.builtin.debug:
+        msg: "{{ docker_ps.stdout_lines }}"
+
+    - name: Check for unhealthy containers
+      ansible.builtin.shell: |
+        docker ps --filter "health=unhealthy" --format "{{'{{'}}.Names{{'}}'}}: {{'{{'}}.Status{{'}}'}}"
+      register: unhealthy
+      changed_when: false
+      failed_when: false
+
+    - name: Alert on unhealthy containers
+      ansible.builtin.debug:
+        msg: "WARNING: Unhealthy containers: {{ unhealthy.stdout_lines }}"
+      when: unhealthy.stdout | length > 0
+
+    - name: Check disk space
+      ansible.builtin.shell: df -h / | tail -1 | awk '{print $5 " used on " $6}'
+      register: disk_space
+      changed_when: false
+
+    - name: Display disk space
+      ansible.builtin.debug:
+        msg: "Disk: {{ disk_space.stdout }}"

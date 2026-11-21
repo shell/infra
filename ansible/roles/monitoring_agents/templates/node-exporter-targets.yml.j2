@@ -1,0 +1,13 @@
+# Managed by Ansible (roles/monitoring_agents) — do not edit.
+# Regenerate: ansible-playbook playbooks/monitoring.yml
+{% for host in groups['monitored'] | sort %}
+{%   set hv = hostvars[host] %}
+{%   if 'node_exporter' in (hv.monitoring_agents | default([])) %}
+- targets: ['{{ hv.ansible_host | default(host) }}:{{ hv.node_exporter_port | default(9100) }}']
+  labels:
+    hostname: {{ host }}
+{%     if hv.expected_offline | default(false) | bool %}
+    expected_offline: "true"
+{%     endif %}
+{%   endif %}
+{% endfor %}

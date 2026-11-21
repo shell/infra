@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: paperless-ai
+  namespace: apps-internal
+spec:
+  selector:
+    app: paperless-ai
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http

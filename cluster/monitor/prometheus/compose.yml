@@ -1,0 +1,69 @@
+services:
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    container_name: prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - 9090:9090
+    user: "1000:1000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - ${DATA_ROOT}/prometheus:/prometheus
+    networks:
+      - default
+      - monitoring
+
+  pve-exporter:
+    image: prompve/prometheus-pve-exporter
+    container_name: pve-exporter
+    # deploy.yml writes the decrypted pve.secret.yml as 0600 vlad:vlad
+    user: "1000:1000"
+    ports:
+      - 9221:9221
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:9221/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    volumes:
+      - ./pve-exporter/pve.secret.yml:/etc/prometheus/pve.yml:ro
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    restart: unless-stopped
+    ports:
+      - 9093:9093
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:9093/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    volumes:
+      - ./alertmanager:/etc/alertmanager
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      # Alert times in Telegram (templates/telegram.tmpl uses .StartsAt.Local)
+      - TZ=America/New_York
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        sed -e "s|__TELEGRAM_BOT_TOKEN__|$$TELEGRAM_BOT_TOKEN|g" \
+            -e "s|__TELEGRAM_CHAT_ID__|$$TELEGRAM_CHAT_ID|g" \
+            /etc/alertmanager/alertmanager.yml.tmpl > /tmp/alertmanager.yml
+        exec /bin/alertmanager --config.file=/tmp/alertmanager.yml
+
+networks:
+  monitoring:
+    external: true

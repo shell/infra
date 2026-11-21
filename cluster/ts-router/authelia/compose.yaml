@@ -1,0 +1,23 @@
+services:
+  authelia:
+    container_name: authelia
+    image: authelia/authelia:4.39.20
+    restart: unless-stopped
+    command: ["authelia", "--config=/config/configuration.yml,/config/secrets.secret.yml"]
+    ports:
+      - "127.0.0.1:9091:9091"
+    volumes:
+      - ./config:/config
+      - ./data:/data
+    networks:
+      - ts-router-net
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9091/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+networks:
+  ts-router-net:
+    external: true

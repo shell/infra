@@ -1,0 +1,3966 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Франция — тревел-гид по четырём регионам</title>
+<meta name="description" content="Тревел-гид по Франции: Прованс, Луара, Эльзас, Нормандия">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+
+
+  /* ===== TOKENS ===== */
+  :root {
+    --cream:    #F5F2ED;
+    --cream-dk: #EDE9E2;
+    --ink:      #1C1C1A;
+    --ink-mid:  #4A4A46;
+    --ink-lt:   #8C8C86;
+    --line:     #D8D4CC;
+    --white:    #FFFFFF;
+    --card-bg:  #FDFCFA;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #fdfcfa;
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== GLOBAL HEADER — FRANCE ===== */
+  .global-header {
+    background: #2d2419;
+    color: var(--white);
+    padding: 24px 60px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .gh-kicker {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    font-weight: 500;
+    margin-bottom: 20px;
+  }
+  .gh-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px;
+    font-weight: 300;
+    line-height: 1.15;
+    margin-bottom: 24px;
+    max-width: 600px;
+  }
+  .gh-title em { font-style: italic; opacity: 0.7; }
+  .gh-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 20px;
+    margin-top: 4px;
+  }
+  .gh-meta-item {
+    padding: 0 28px 0 0;
+    margin-right: 28px;
+    border-right: 1px solid rgba(255,255,255,0.15);
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.4;
+  }
+  .gh-meta-item:last-child { border-right: none; }
+  .gh-meta-item strong {
+    display: block;
+    color: rgba(255,255,255,0.85);
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 1px;
+  }
+
+  /* ===== REGION HERO — full-width image banner ===== */
+  .region-hero {
+    position: relative;
+    height: 480px;
+    overflow: hidden;
+  }
+  .region-hero img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 40%;
+    display: block;
+  }
+  .region-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(28,28,26,0.08) 0%,
+      rgba(28,28,26,0.12) 40%,
+      rgba(28,28,26,0.65) 100%
+    );
+  }
+  .region-hero-content {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 40px 60px;
+  }
+  .region-hero-kicker {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.6);
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+  .region-hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 60px;
+    font-weight: 300;
+    color: #fff;
+    line-height: 1.05;
+    margin-bottom: 6px;
+  }
+  .region-hero-subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-style: italic;
+    font-weight: 300;
+    color: rgba(255,255,255,0.65);
+    margin-bottom: 16px;
+  }
+  .region-hero-tagline {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    max-width: 560px;
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+
+  /* ===== PAGE BODY ===== */
+  .page-body {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 60px 100px;
+  }
+
+  /* ===== SECTION ===== */
+  .section { margin-bottom: 64px; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .section-kicker {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-mid);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .section-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    color: var(--ink-mid);
+    font-weight: 600;
+  }
+
+  /* ===== BASE SECTION ===== */
+  .base-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .base-card {
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    padding: 16px 18px;
+    position: relative;
+  }
+  .base-card.recommended {
+    border-color: var(--accent);
+    border-left-width: 3px;
+  }
+  .base-badge {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-lt);
+    padding: 3px 8px;
+    margin-bottom: 10px;
+  }
+  .base-card h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 400;
+    margin-bottom: 10px;
+    line-height: 1.2;
+  }
+  .base-card p {
+    font-size: 13px;
+    color: var(--ink-mid);
+    line-height: 1.65;
+  }
+  .base-note {
+    font-size: 11px;
+    color: var(--ink-lt);
+    font-style: italic;
+    margin-top: 6px;
+  }
+  .base-card-extra {
+    background: var(--card-bg);
+    border: 1px dashed var(--line);
+    padding: 20px 26px;
+  }
+  .base-card-extra h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 400;
+    margin-bottom: 8px;
+  }
+  .base-card-extra p {
+    font-size: 13px;
+    color: var(--ink-mid);
+    line-height: 1.65;
+  }
+
+  /* ===== PLACE CARD — new horizontal layout ===== */
+  .place-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .place-card:last-child { margin-bottom: 0; }
+
+  .place-left {
+    padding: 26px 28px;
+    border-right: 1px solid var(--line);
+  }
+  .place-top {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .place-num-big {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--ink-mid);
+    line-height: 1;
+    flex-shrink: 0;
+    width: 32px;
+    padding-top: 4px;
+  }
+  .place-title-area { flex: 1; }
+  .place-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .place-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 3px;
+  }
+  .place-tag {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-lt);
+    font-weight: 500;
+  }
+  .place-tag::after { content: ' ·'; }
+  .place-tag:last-child::after { content: ''; }
+  .place-dist {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 500;
+    flex-shrink: 0;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .place-dist span {
+    display: block;
+    font-size: 11px;
+    font-weight: 300;
+    color: var(--ink-lt);
+    margin-top: 2px;
+  }
+
+  .why-block { margin-bottom: 14px; }
+  .mini-label {
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ink-lt);
+    margin-bottom: 7px;
+  }
+  .why-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .why-list li {
+    font-size: 13px;
+    color: var(--ink-mid);
+    line-height: 1.5;
+    padding-left: 14px;
+    position: relative;
+  }
+  .why-list li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 8px;
+    width: 4px; height: 1px;
+    background: var(--accent);
+  }
+
+  .do-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .do-tag {
+    font-size: 11px;
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+    color: var(--ink-mid);
+    background: var(--cream);
+    font-weight: 400;
+  }
+
+  .place-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-top: 12px;
+    border-top: 1px solid var(--cream-dk);
+  }
+  .trans-note {
+    font-size: 12px;
+    color: var(--ink-lt);
+    flex: 1;
+    line-height: 1.5;
+  }
+  .trans-note strong { color: var(--ink-mid); font-weight: 500; }
+  .price-chip {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink-mid);
+    background: var(--cream-dk);
+    padding: 4px 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ===== PHOTO COLUMN ===== */
+  .place-photos {
+    width: 200px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: var(--cream-dk);
+  }
+
+  /* 2 photos side by side — same style as single photo */
+  .place-photos.two-photos {
+    display: flex;
+    flex-direction: row;
+    width: 400px;
+    background: var(--cream-dk);
+  }
+  .place-photos.two-photos img {
+    width: 50%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    flex-shrink: 0;
+  }
+  .place-photos.two-photos img:first-child {
+    border-right: 2px solid var(--white);
+  }
+
+  .photo-divider { display: none; }
+  .place-photos img {
+    width: 100%;
+    flex: 1;
+    object-fit: cover;
+    display: block;
+    min-height: 0;
+  }
+  .place-photos.one-photo img {
+    height: 100%;
+  }
+
+  /* Place with no photos */
+  .place-nophoto {
+    grid-template-columns: 1fr;
+  }
+  .place-nophoto .place-left {
+    border-right: none;
+  }
+
+  /* ===== SECTION SEPARATOR ===== */
+  .sec-sep {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 48px 0 32px;
+  }
+  .sec-sep-line { flex: 1; height: 1px; background: var(--line); }
+  .sec-sep-label {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-lt);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  /* ===== INFO GRID — food / beach ===== */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .info-cell {
+    background: var(--card-bg);
+    padding: 20px 22px;
+  }
+  .info-icon { font-size: 22px; margin-bottom: 10px; }
+  .info-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    line-height: 1.2;
+  }
+  .info-desc { font-size: 12px; color: var(--ink-mid); line-height: 1.55; }
+
+  /* ===== BEACH ===== */
+  .beach-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    margin-bottom: 12px;
+  }
+  .beach-cell {
+    background: var(--card-bg);
+    padding: 24px 26px;
+  }
+  .beach-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 19px;
+    font-weight: 400;
+    margin-bottom: 8px;
+  }
+  .beach-temp {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 38px;
+    font-weight: 300;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .beach-desc { font-size: 13px; color: var(--ink-mid); line-height: 1.6; }
+  .beach-note {
+    padding: 16px 22px;
+    background: #f0ece6;
+    border-left: 2px solid #8C8C86;
+    font-size: 12px;
+    color: var(--ink-mid);
+    line-height: 1.7;
+    font-style: italic;
+    letter-spacing: 0.01em;
+  }
+
+  /* ===== CAR DAYS ===== */
+  .car-days {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .car-day {
+    background: var(--card-bg);
+    padding: 22px 26px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  .car-day-icon { font-size: 18px; flex-shrink: 0; padding-top: 2px; }
+  .car-day-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 400;
+    margin-bottom: 6px;
+  }
+  .car-day-route { font-size: 12px; color: var(--ink-mid); line-height: 1.65; }
+
+  /* ===== TIPS ===== */
+  .tips-box {
+    background: var(--ink);
+    color: var(--white);
+    padding: 36px 40px;
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 40px;
+    align-items: start;
+  }
+  .tips-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 300;
+    line-height: 1.2;
+    color: rgba(255,255,255,0.85);
+  }
+  .tips-label em { font-style: italic; display: block; }
+  .tips-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .tips-list li {
+    font-size: 13px;
+    color: rgba(255,255,255,0.65);
+    padding-left: 16px;
+    position: relative;
+    line-height: 1.6;
+  }
+  .tips-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: rgba(255,255,255,0.3);
+    font-size: 12px;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    .global-header { padding: 36px 28px 32px; }
+    .gh-title { font-size: 36px; }
+    .region-hero { height: 340px; }
+    .region-hero-content { padding: 28px 28px; }
+    .region-hero-title { font-size: 40px; }
+    .region-hero-subtitle { font-size: 20px; }
+.page-body { padding: 40px 28px 80px; }
+    .base-grid { grid-template-columns: 1fr; }
+    .info-grid { grid-template-columns: 1fr 1fr; }
+    .place-card { grid-template-columns: 1fr; }
+    .place-left { border-right: none; }
+    .place-photos { width: 100%; flex-direction: row; height: 180px; }
+    .place-photos img { height: 100%; }
+    .place-photos.two-photos img { width: 50%; height: 100%; }
+    .photo-divider { width: 1px; height: 100%; }
+    .tips-box { grid-template-columns: 1fr; gap: 20px; padding: 28px; }
+    .beach-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .gh-title { font-size: 28px; }
+    .region-hero { height: 280px; }
+    .region-hero-title { font-size: 32px; }
+    .info-grid { grid-template-columns: 1fr; }
+    .gh-meta { flex-direction: column; gap: 10px; }
+    .gh-meta-item { border-right: none; padding-right: 0; margin-right: 0; }
+  }
+
+
+
+
+  /* ===== TOKENS ===== */
+  :root {
+    --cream:    #F5F2ED;
+    --cream-dk: #EDE9E2;
+    --ink:      #1C1C1A;
+    --ink-mid:  #4A4A46;
+    --ink-lt:   #8C8C86;
+    --line:     #D8D4CC;
+    --white:    #FFFFFF;
+    --card-bg:  #FDFCFA;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #fdfcfa;
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== GLOBAL HEADER ===== */
+  .global-header {
+    background: #2d2419;
+    color: var(--white);
+    padding: 24px 60px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .gh-kicker {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    font-weight: 500;
+    margin-bottom: 20px;
+  }
+  .gh-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px;
+    font-weight: 300;
+    line-height: 1.15;
+    margin-bottom: 24px;
+    max-width: 600px;
+  }
+  .gh-title em { font-style: italic; opacity: 0.7; }
+  .gh-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 20px;
+    margin-top: 4px;
+  }
+  .gh-meta-item {
+    padding: 0 28px 0 0;
+    margin-right: 28px;
+    border-right: 1px solid rgba(255,255,255,0.15);
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.4;
+  }
+  .gh-meta-item:last-child { border-right: none; }
+  .gh-meta-item strong {
+    display: block;
+    color: rgba(255,255,255,0.85);
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 1px;
+  }
+
+  /* ===== REGION HERO ===== */
+  .region-hero {
+    position: relative;
+    height: 480px;
+    overflow: hidden;
+  }
+  .region-hero img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 40%;
+    display: block;
+  }
+  .region-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(28,28,26,0.08) 0%,
+      rgba(28,28,26,0.12) 40%,
+      rgba(28,28,26,0.65) 100%
+    );
+  }
+  .region-hero-content {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 40px 60px;
+  }
+  .region-hero-kicker {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.6);
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+  .region-hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 60px;
+    font-weight: 300;
+    color: #fff;
+    line-height: 1.05;
+    margin-bottom: 6px;
+  }
+  .region-hero-subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-style: italic;
+    font-weight: 300;
+    color: rgba(255,255,255,0.65);
+    margin-bottom: 16px;
+  }
+  .region-hero-tagline {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    max-width: 560px;
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  /* ===== PAGE BODY ===== */
+  .page-body {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 60px 100px;
+  }
+
+  /* ===== SECTION ===== */
+  .section { margin-bottom: 64px; }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .section-kicker {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-mid);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .section-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    color: var(--ink-mid);
+    font-weight: 600;
+  }
+
+  /* ===== BASE SECTION ===== */
+  .base-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .base-card {
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    padding: 16px 18px;
+    position: relative;
+  }
+  .base-card.recommended {
+    border-color: var(--accent);
+    border-left-width: 3px;
+  }
+  .base-badge {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-lt);
+    padding: 3px 8px;
+    margin-bottom: 10px;
+  }
+  .base-card img {
+    display: block;
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    margin-bottom: 14px;
+  }
+  .base-card h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 400;
+    margin-bottom: 10px;
+    line-height: 1.2;
+  }
+  .base-card p {
+    font-size: 13px;
+    color: var(--ink-mid);
+    line-height: 1.65;
+  }
+
+  /* ===== PLACE CARD ===== */
+  .place-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .place-card:last-child { margin-bottom: 0; }
+
+  .place-left {
+    padding: 26px 28px;
+    border-right: 1px solid var(--line);
+  }
+  .place-top {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .place-num-big {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--ink-mid);
+    line-height: 1;
+    flex-shrink: 0;
+    width: 32px;
+    padding-top: 4px;
+  }
+  .place-title-area { flex: 1; }
+  .place-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .place-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 3px;
+  }
+  .place-tag {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-lt);
+    font-weight: 500;
+  }
+  .place-tag::after { content: ' ·'; }
+  .place-tag:last-child::after { content: ''; }
+  .place-dist {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 500;
+    flex-shrink: 0;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .place-dist span {
+    display: block;
+    font-size: 11px;
+    font-weight: 300;
+    color: var(--ink-lt);
+    margin-top: 2px;
+  }
+
+  .why-block { margin-bottom: 14px; }
+  .mini-label {
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ink-lt);
+    margin-bottom: 7px;
+  }
+  .why-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .why-list li {
+    font-size: 13px;
+    color: var(--ink-mid);
+    line-height: 1.5;
+    padding-left: 14px;
+    position: relative;
+  }
+  .why-list li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 8px;
+    width: 4px; height: 1px;
+    background: var(--accent);
+  }
+
+  .do-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .do-tag {
+    font-size: 11px;
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+    color: var(--ink-mid);
+    background: var(--cream);
+    font-weight: 400;
+  }
+
+  .place-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-top: 12px;
+    border-top: 1px solid var(--cream-dk);
+  }
+  .trans-note {
+    font-size: 12px;
+    color: var(--ink-lt);
+    flex: 1;
+    line-height: 1.5;
+  }
+  .trans-note strong { color: var(--ink-mid); font-weight: 500; }
+  .price-chip {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink-mid);
+    background: var(--cream-dk);
+    padding: 4px 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ===== PHOTO COLUMN ===== */
+  .place-photos {
+    width: 200px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: var(--cream-dk);
+  }
+  .place-photos.two-photos {
+    display: flex;
+    flex-direction: row;
+    width: 400px;
+    background: var(--cream-dk);
+  }
+  .place-photos.two-photos img {
+    width: 50%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    flex-shrink: 0;
+  }
+  .place-photos.two-photos img:first-child {
+    border-right: 2px solid var(--white);
+  }
+  .place-photos img {
+    width: 100%;
+    flex: 1;
+    object-fit: cover;
+    display: block;
+    min-height: 0;
+  }
+  .place-photos.one-photo img { height: 100%; }
+  .place-nophoto { grid-template-columns: 1fr; }
+  .place-nophoto .place-left { border-right: none; }
+
+  /* ===== INFO GRID — food ===== */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .info-cell {
+    background: var(--card-bg);
+    padding: 20px 22px;
+  }
+  .info-icon { font-size: 22px; margin-bottom: 10px; }
+  .info-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    line-height: 1.2;
+  }
+  .info-desc { font-size: 12px; color: var(--ink-mid); line-height: 1.55; }
+
+  /* ===== CAR DAYS ===== */
+  .car-days {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .car-day {
+    background: var(--card-bg);
+    padding: 22px 26px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  .car-day-icon { font-size: 18px; flex-shrink: 0; padding-top: 2px; }
+  .car-day-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 400;
+    margin-bottom: 6px;
+  }
+  .car-day-route { font-size: 12px; color: var(--ink-mid); line-height: 1.65; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    .global-header { padding: 36px 28px 32px; }
+    .gh-title { font-size: 36px; }
+    .region-hero { height: 340px; }
+    .region-hero-content { padding: 28px 28px; }
+    .region-hero-title { font-size: 40px; }
+    .region-hero-subtitle { font-size: 20px; }
+    .page-body { padding: 40px 28px 80px; }
+    .base-grid { grid-template-columns: 1fr; }
+    .info-grid { grid-template-columns: 1fr 1fr; }
+    .place-card { grid-template-columns: 1fr; }
+    .place-left { border-right: none; }
+    .place-photos { width: 100%; flex-direction: row; height: 180px; }
+    .place-photos img { height: 100%; }
+    .place-photos.two-photos img { width: 50%; height: 100%; }
+  }
+  @media (max-width: 600px) {
+    .gh-title { font-size: 28px; }
+    .region-hero { height: 280px; }
+    .region-hero-title { font-size: 32px; }
+    .info-grid { grid-template-columns: 1fr; }
+    .gh-meta { flex-direction: column; gap: 10px; }
+    .gh-meta-item { border-right: none; padding-right: 0; margin-right: 0; }
+  }
+
+
+
+
+  /* ===== TOKENS ===== */
+  :root {
+    --cream:    #F5F2ED;
+    --cream-dk: #EDE9E2;
+    --ink:      #1C1C1A;
+    --ink-mid:  #4A4A46;
+    --ink-lt:   #8C8C86;
+    --line:     #D8D4CC;
+    --white:    #FFFFFF;
+    --card-bg:  #FDFCFA;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #fdfcfa;
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== GLOBAL HEADER ===== */
+  .global-header {
+    background: #2d2419;
+    color: var(--white);
+    padding: 24px 60px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .gh-kicker {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    font-weight: 500;
+    margin-bottom: 20px;
+  }
+  .gh-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px;
+    font-weight: 300;
+    line-height: 1.15;
+    margin-bottom: 24px;
+    max-width: 600px;
+  }
+  .gh-title em { font-style: italic; opacity: 0.7; }
+  .gh-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 20px;
+    margin-top: 4px;
+  }
+  .gh-meta-item {
+    padding: 0 28px 0 0;
+    margin-right: 28px;
+    border-right: 1px solid rgba(255,255,255,0.15);
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.4;
+  }
+  .gh-meta-item:last-child { border-right: none; }
+  .gh-meta-item strong {
+    display: block;
+    color: rgba(255,255,255,0.85);
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 1px;
+  }
+
+  /* ===== REGION HERO ===== */
+  .region-hero {
+    position: relative;
+    height: 480px;
+    overflow: hidden;
+  }
+  .region-hero img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 40%;
+    display: block;
+  }
+  .region-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(28,28,26,0.08) 0%,
+      rgba(28,28,26,0.12) 40%,
+      rgba(28,28,26,0.65) 100%
+    );
+  }
+  .region-hero-content {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 40px 60px;
+  }
+  .region-hero-kicker {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.6);
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+  .region-hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 60px;
+    font-weight: 300;
+    color: #fff;
+    line-height: 1.05;
+    margin-bottom: 6px;
+  }
+  .region-hero-subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-style: italic;
+    font-weight: 300;
+    color: rgba(255,255,255,0.65);
+    margin-bottom: 16px;
+  }
+  .region-hero-tagline {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    max-width: 560px;
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  /* ===== PAGE BODY ===== */
+  .page-body {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 60px 100px;
+  }
+
+  /* ===== SECTION ===== */
+  .section { margin-bottom: 64px; }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .section-kicker {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-mid);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .section-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    color: var(--ink-mid);
+    font-weight: 600;
+  }
+
+  /* ===== BASE SECTION ===== */
+  .base-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .base-card {
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    padding: 16px 18px;
+    position: relative;
+  }
+  .base-card.recommended {
+    border-color: var(--accent);
+    border-left-width: 3px;
+  }
+  .base-card img {
+    display: block;
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    margin-bottom: 14px;
+  }
+  .base-badge {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-lt);
+    padding: 3px 8px;
+    margin-bottom: 10px;
+  }
+  .base-card h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 400;
+    margin-bottom: 10px;
+    line-height: 1.2;
+  }
+  .base-card p {
+    font-size: 13px;
+    color: var(--ink-mid);
+    line-height: 1.65;
+  }
+
+  /* ===== PLACE CARD ===== */
+  .place-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .place-card:last-child { margin-bottom: 0; }
+
+  .place-left {
+    padding: 26px 28px;
+    border-right: 1px solid var(--line);
+  }
+  .place-top {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .place-num-big {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--ink-mid);
+    line-height: 1;
+    flex-shrink: 0;
+    width: 32px;
+    padding-top: 4px;
+  }
+  .place-title-area { flex: 1; }
+  .place-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .place-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 3px;
+  }
+  .place-tag {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-lt);
+    font-weight: 500;
+  }
+  .place-tag::after { content: ' ·'; }
+  .place-tag:last-child::after { content: ''; }
+  .place-dist {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 500;
+    flex-shrink: 0;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .place-dist span {
+    display: block;
+    font-size: 11px;
+    font-weight: 300;
+    color: var(--ink-lt);
+    margin-top: 2px;
+  }
+
+  .why-block { margin-bottom: 14px; }
+  .mini-label {
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ink-lt);
+    margin-bottom: 7px;
+  }
+  .why-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .why-list li {
+    font-size: 13px;
+    color: var(--ink-mid);
+    line-height: 1.5;
+    padding-left: 14px;
+    position: relative;
+  }
+  .why-list li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 8px;
+    width: 4px; height: 1px;
+    background: var(--accent);
+  }
+
+  .do-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .do-tag {
+    font-size: 11px;
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+    color: var(--ink-mid);
+    background: var(--cream);
+    font-weight: 400;
+  }
+
+  .place-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-top: 12px;
+    border-top: 1px solid var(--cream-dk);
+  }
+  .trans-note {
+    font-size: 12px;
+    color: var(--ink-lt);
+    flex: 1;
+    line-height: 1.5;
+  }
+  .trans-note strong { color: var(--ink-mid); font-weight: 500; }
+  .price-chip {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink-mid);
+    background: var(--cream-dk);
+    padding: 4px 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ===== PHOTO COLUMN ===== */
+  .place-photos {
+    width: 200px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: var(--cream-dk);
+  }
+  .place-photos.two-photos {
+    display: flex;
+    flex-direction: row;
+    width: 400px;
+    background: var(--cream-dk);
+  }
+  .place-photos.two-photos img {
+    width: 50%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    flex-shrink: 0;
+  }
+  .place-photos.two-photos img:first-child {
+    border-right: 2px solid var(--white);
+  }
+  .place-photos img {
+    width: 100%;
+    flex: 1;
+    object-fit: cover;
+    display: block;
+    min-height: 0;
+  }
+  .place-photos.one-photo img { height: 100%; }
+  .place-nophoto { grid-template-columns: 1fr; }
+  .place-nophoto .place-left { border-right: none; }
+
+  /* ===== SEA NOTE ===== */
+  .sea-note {
+    padding: 20px 26px;
+    background: var(--accent-lt);
+    border-left: 3px solid var(--accent);
+    margin-top: 20px;
+  }
+  .sea-note-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 400;
+    margin-bottom: 12px;
+    color: var(--ink);
+  }
+  .sea-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .sea-item { }
+  .sea-item-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 3px;
+  }
+  .sea-item-temp {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 300;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .sea-item-desc {
+    font-size: 12px;
+    color: var(--ink-mid);
+    line-height: 1.55;
+  }
+  .sea-footer {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(192,57,43,0.15);
+    font-size: 12px;
+    color: var(--ink-mid);
+    font-style: italic;
+    line-height: 1.6;
+  }
+
+  /* ===== INFO GRID — food ===== */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .info-cell {
+    background: var(--card-bg);
+    padding: 20px 22px;
+  }
+  .info-icon { font-size: 22px; margin-bottom: 10px; }
+  .info-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    line-height: 1.2;
+  }
+  .info-desc { font-size: 12px; color: var(--ink-mid); line-height: 1.55; }
+
+  /* ===== CAR DAYS ===== */
+  .car-days {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .car-day {
+    background: var(--card-bg);
+    padding: 22px 26px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  .car-day-icon { font-size: 18px; flex-shrink: 0; padding-top: 2px; }
+  .car-day-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 400;
+    margin-bottom: 6px;
+  }
+  .car-day-route { font-size: 12px; color: var(--ink-mid); line-height: 1.65; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    .global-header { padding: 36px 28px 32px; }
+    .gh-title { font-size: 36px; }
+    .region-hero { height: 340px; }
+    .region-hero-content { padding: 28px 28px; }
+    .region-hero-title { font-size: 40px; }
+    .region-hero-subtitle { font-size: 20px; }
+    .page-body { padding: 40px 28px 80px; }
+    .base-grid { grid-template-columns: 1fr; }
+    .info-grid { grid-template-columns: 1fr 1fr; }
+    .place-card { grid-template-columns: 1fr; }
+    .place-left { border-right: none; }
+    .place-photos { width: 100%; flex-direction: row; height: 180px; }
+    .place-photos img { height: 100%; }
+    .place-photos.two-photos img { width: 50%; height: 100%; }
+    .sea-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .gh-title { font-size: 28px; }
+    .region-hero { height: 280px; }
+    .region-hero-title { font-size: 32px; }
+    .info-grid { grid-template-columns: 1fr; }
+    .gh-meta { flex-direction: column; gap: 10px; }
+    .gh-meta-item { border-right: none; padding-right: 0; margin-right: 0; }
+  }
+
+
+
+
+  /* ===== TOKENS ===== */
+  :root {
+    --cream:    #F5F2ED;
+    --cream-dk: #EDE9E2;
+    --ink:      #1C1C1A;
+    --ink-mid:  #4A4A46;
+    --ink-lt:   #8C8C86;
+    --line:     #D8D4CC;
+    --white:    #FFFFFF;
+    --card-bg:  #FDFCFA;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #fdfcfa;
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== GLOBAL HEADER ===== */
+  .global-header {
+    background: #2d2419;
+    color: var(--white);
+    padding: 24px 60px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .gh-kicker {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    font-weight: 500;
+    margin-bottom: 20px;
+  }
+  .gh-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px;
+    font-weight: 300;
+    line-height: 1.15;
+    margin-bottom: 24px;
+    max-width: 600px;
+  }
+  .gh-title em { font-style: italic; opacity: 0.7; }
+  .gh-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 20px;
+    margin-top: 4px;
+  }
+  .gh-meta-item {
+    padding: 0 28px 0 0;
+    margin-right: 28px;
+    border-right: 1px solid rgba(255,255,255,0.15);
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.4;
+  }
+  .gh-meta-item:last-child { border-right: none; }
+  .gh-meta-item strong {
+    display: block;
+    color: rgba(255,255,255,0.85);
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 1px;
+  }
+
+  /* ===== REGION HERO ===== */
+  .region-hero {
+    position: relative;
+    height: 480px;
+    overflow: hidden;
+  }
+  .region-hero img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 40%;
+    display: block;
+  }
+  .region-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(28,28,26,0.08) 0%,
+      rgba(28,28,26,0.12) 40%,
+      rgba(28,28,26,0.65) 100%
+    );
+  }
+  .region-hero-content {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 40px 60px;
+  }
+  .region-hero-kicker {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.6);
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+  .region-hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 60px;
+    font-weight: 300;
+    color: #fff;
+    line-height: 1.05;
+    margin-bottom: 6px;
+  }
+  .region-hero-subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-style: italic;
+    font-weight: 300;
+    color: rgba(255,255,255,0.65);
+    margin-bottom: 16px;
+  }
+  .region-hero-tagline {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    max-width: 560px;
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  /* ===== PAGE BODY ===== */
+  .page-body {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 60px 100px;
+  }
+
+  /* ===== SECTION ===== */
+  .section { margin-bottom: 64px; }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .section-kicker {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-mid);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .section-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    color: var(--ink-mid);
+    font-weight: 600;
+  }
+
+  /* ===== BASE SECTION ===== */
+  .base-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .base-card {
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    padding: 16px 18px;
+    position: relative;
+  }
+  .base-card.recommended {
+    border-color: var(--accent);
+    border-left-width: 3px;
+  }
+  .base-card img {
+    display: block;
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    margin-bottom: 14px;
+  }
+  .base-badge {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-lt);
+    padding: 3px 8px;
+    margin-bottom: 10px;
+  }
+  .base-card h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 400;
+    margin-bottom: 10px;
+    line-height: 1.2;
+  }
+  .base-card p {
+    font-size: 13px;
+    color: var(--ink-mid);
+    line-height: 1.65;
+  }
+
+  /* ===== PLACE CARD ===== */
+  .place-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .place-card:last-child { margin-bottom: 0; }
+
+  .place-left {
+    padding: 26px 28px;
+    border-right: 1px solid var(--line);
+  }
+  .place-top {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .place-num-big {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--ink-mid);
+    line-height: 1;
+    flex-shrink: 0;
+    width: 32px;
+    padding-top: 4px;
+  }
+  .place-title-area { flex: 1; }
+  .place-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .place-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 3px;
+  }
+  .place-tag {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-lt);
+    font-weight: 500;
+  }
+  .place-tag::after { content: ' ·'; }
+  .place-tag:last-child::after { content: ''; }
+  .place-dist {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 500;
+    flex-shrink: 0;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .place-dist span {
+    display: block;
+    font-size: 11px;
+    font-weight: 300;
+    color: var(--ink-lt);
+    margin-top: 2px;
+  }
+
+  .why-block { margin-bottom: 14px; }
+  .mini-label {
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ink-lt);
+    margin-bottom: 7px;
+  }
+  .why-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .why-list li {
+    font-size: 13px;
+    color: var(--ink-mid);
+    line-height: 1.5;
+    padding-left: 14px;
+    position: relative;
+  }
+  .why-list li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 8px;
+    width: 4px; height: 1px;
+    background: var(--accent);
+  }
+
+  .do-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .do-tag {
+    font-size: 11px;
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+    color: var(--ink-mid);
+    background: var(--cream);
+    font-weight: 400;
+  }
+
+  .place-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-top: 12px;
+    border-top: 1px solid var(--cream-dk);
+  }
+  .trans-note {
+    font-size: 12px;
+    color: var(--ink-lt);
+    flex: 1;
+    line-height: 1.5;
+  }
+  .trans-note strong { color: var(--ink-mid); font-weight: 500; }
+  .price-chip {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink-mid);
+    background: var(--cream-dk);
+    padding: 4px 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ===== PHOTO COLUMN ===== */
+  .place-photos {
+    width: 200px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: var(--cream-dk);
+  }
+  .place-photos.two-photos {
+    display: flex;
+    flex-direction: row;
+    width: 400px;
+    background: var(--cream-dk);
+  }
+  .place-photos.two-photos img {
+    width: 50%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    flex-shrink: 0;
+  }
+  .place-photos.two-photos img:first-child {
+    border-right: 2px solid var(--white);
+  }
+  .place-photos img {
+    width: 100%;
+    flex: 1;
+    object-fit: cover;
+    display: block;
+    min-height: 0;
+  }
+  .place-photos.one-photo img { height: 100%; }
+  .place-nophoto { grid-template-columns: 1fr; }
+  .place-nophoto .place-left { border-right: none; }
+
+  /* ===== INFO GRID — food ===== */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .info-cell {
+    background: var(--card-bg);
+    padding: 20px 22px;
+  }
+  .info-icon { font-size: 22px; margin-bottom: 10px; }
+  .info-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    line-height: 1.2;
+  }
+  .info-desc { font-size: 12px; color: var(--ink-mid); line-height: 1.55; }
+
+  /* ===== CAR DAYS ===== */
+  .car-days {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+  .car-day {
+    background: var(--card-bg);
+    padding: 22px 26px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  .car-day-icon { font-size: 18px; flex-shrink: 0; padding-top: 2px; }
+  .car-day-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 400;
+    margin-bottom: 6px;
+  }
+  .car-day-route { font-size: 12px; color: var(--ink-mid); line-height: 1.65; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    .global-header { padding: 36px 28px 32px; }
+    .gh-title { font-size: 36px; }
+    .region-hero { height: 340px; }
+    .region-hero-content { padding: 28px 28px; }
+    .region-hero-title { font-size: 40px; }
+    .region-hero-subtitle { font-size: 20px; }
+    .page-body { padding: 40px 28px 80px; }
+    .base-grid { grid-template-columns: 1fr; }
+    .info-grid { grid-template-columns: 1fr 1fr; }
+    .place-card { grid-template-columns: 1fr; }
+    .place-left { border-right: none; }
+    .place-photos { width: 100%; flex-direction: row; height: 180px; }
+    .place-photos img { height: 100%; }
+    .place-photos.two-photos img { width: 50%; height: 100%; }
+  }
+  @media (max-width: 600px) {
+    .gh-title { font-size: 28px; }
+    .region-hero { height: 280px; }
+    .region-hero-title { font-size: 32px; }
+    .info-grid { grid-template-columns: 1fr; }
+    .gh-meta { flex-direction: column; gap: 10px; }
+    .gh-meta-item { border-right: none; padding-right: 0; margin-right: 0; }
+  }
+
+
+
+  /* ===== PATCH: FIXED GRID & IMAGES ===== */
+  .base-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important;
+    gap: 12px !important;
+  }
+  .base-card img {
+    display: block !important;
+    width: 100% !important;
+    height: 180px !important;
+    object-fit: cover !important;
+    margin-bottom: 12px !important;
+  }
+
+
+  /* ===== TAB NAVIGATION ===== */
+  .tab-nav {
+    background: #fff;
+    display: flex;
+    align-items: stretch;
+    padding: 0 60px;
+    border-bottom: 1px solid #efefef;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+  .tab-btn {
+    background: none;
+    border: none;
+    outline: none; /* Убираем синюю рамку при нажатии */
+    color: #231d14;
+    opacity: 0.5;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 18px 24px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px; /* Чтобы перекрывать бордер nav */
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { opacity: 1; }
+  .tab-btn.active {
+    opacity: 1;
+    color: #231d14;
+    border-bottom-color: #231d14;
+  }
+  /* ─── Цвет нижнего подчеркивания для активного таба по региону ─── */
+  .tab-btn[data-tab="normandy"].active { border-bottom-color: #2D5016; }
+  .tab-btn[data-tab="alsace"].active   { border-bottom-color: #5E4B8B; }
+  .tab-btn[data-tab="provence"].active { border-bottom-color: #C0392B; }
+  .tab-btn[data-tab="loire"].active    { border-bottom-color: #B5670F; }
+
+  /* ===== REGION PANELS ===== */
+  .region-panel { display: none; }
+  .region-panel.active { display: block; }
+
+  /* ===== SCOPED ACCENT COLORS PER REGION ===== */
+  #panel-normandy { --accent: #2D5016; --accent-lt: #E8EDE3; }
+  #panel-alsace   { --accent: #5E4B8B; --accent-lt: #EDE8F5; }
+  #panel-provence { --accent: #C0392B; --accent-lt: #FDF0EF; }
+  #panel-loire    { --accent: #B5670F; --accent-lt: #FEF3E2; }
+
+  @media (max-width: 900px) {
+    .tab-nav { padding: 0 28px; overflow-x: auto; }
+    .tab-btn  { padding: 14px 16px; font-size: 11px; }
+  }
+  @media (max-width: 600px) {
+    .tab-nav { padding: 0 12px; }
+    .tab-btn  { padding: 12px 10px; letter-spacing: 0.08em; }
+  }
+
+</style>
+</head>
+<body>
+
+<!-- ========= GLOBAL HEADER (единая шапка) ========= -->
+
+<div class="global-header">
+  <div class="gh-kicker">Франция — Кураторский тревел-гид · Семейное путешествие · Сентябрь</div>
+  <h1 class="gh-title">Франция — <em>комплексный гид</em><br>по четырём регионам</h1>
+  <div class="gh-meta">
+    <div class="gh-meta-item">
+      <strong>6–7 человек</strong>
+      Состав группы
+    </div>
+    <div class="gh-meta-item">
+      <strong>База + выезды</strong>
+      Формат
+    </div>
+    <div class="gh-meta-item">
+      <strong>🚆 ~2 ч</strong>
+      Нормандия (Довиль/Трувиль)
+    </div>
+    <div class="gh-meta-item">
+      <strong>🚆 ~1 ч 45 мин</strong>
+      Эльзас (Страсбург)
+    </div>
+    <div class="gh-meta-item">
+      <strong>🚆 ~2 ч 40 мин</strong>
+      Прованс (Авиньон)
+    </div>
+    <div class="gh-meta-item">
+      <strong>🚆 ~1 ч 05 мин</strong>
+      Долина Луары (Тур)
+    </div>
+  </div>
+</div>
+
+
+<!-- ========= TAB NAVIGATION ========= -->
+<nav class="tab-nav">
+  <button class="tab-btn" data-tab="normandy">Нормандия</button>
+  <button class="tab-btn" data-tab="alsace">Эльзас</button>
+  <button class="tab-btn" data-tab="provence">Прованс</button>
+  <button class="tab-btn" data-tab="loire">Луара</button>
+</nav>
+
+<!-- ========= REGION PANELS ========= -->
+<!-- ========= НОРМАНДИЯ ========= -->
+<div class="region-panel" id="panel-normandy">
+<div class="region-hero">
+  <img loading="lazy" src="build/headers/normandy3.webp" alt="Нормандия — Этрета">
+  <div class="region-hero-overlay"></div>
+  <div class="region-hero-content">
+    <div class="region-hero-kicker">Регион I · Нормандия</div>
+    <div class="region-hero-title">Нормандия</div>
+    <div class="region-hero-subtitle">Côte Fleurie</div>
+    <div class="region-hero-tagline">Меловые скалы, Belle Époque, устрицы с кальвадосом, история D-Day и Ла-Манш — освежающий, а не тёплый.</div>
+  </div>
+</div>
+
+<!-- ========= PAGE BODY ========= -->
+<div class="page-body">
+
+  <!-- ===== 1. WHERE TO STAY ===== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <span class="section-kicker">Где жить — база</span>
+    </div>
+
+    <div class="base-grid">
+      <div class="base-card">
+        <img loading="lazy" src="build/normandy/trouville04.webp" alt="Трувиль" style="width:100%; height:160px; object-fit:cover; margin-bottom:12px;">
+        <h3>Трувиль (Trouville-sur-mer)</h3>
+        <p>Для жизни! Рыбацкая деревня, ставшая курортом. Более демократичный, живой, с лучшим рыбным рынком. Здесь всё про «зайти в гости», тарелку устриц у прилавка и длинные прогулки по мягкому песку.</p>
+      </div>
+      <div class="base-card">
+        <img loading="lazy" src="build/normandy/deauvillebeach.webp" alt="Довиль" style="width:100%; height:160px; object-fit:cover; margin-bottom:12px;">
+        <h3>Довиль (Deauville)</h3>
+        <p>Для атмосферы! Бутики, казино, нарядные виллы и знаменитый променад Les Planches. Город — декорация, где каждый дом — шедевр нормандского фахверка в стиле «англо-норман».</p>
+      </div>
+      <div class="base-card">
+        <img loading="lazy" src="build/normandy/honfleur-normandy.webp" alt="Онфлёр" style="width:100%; height:160px; object-fit:cover; margin-bottom:12px;">
+        <h3>Онфлёр (Honfleur)</h3>
+        <p>Для души! Из Довиля/Трувиля — 20 мин. на авто/автобусе. Старая гавань, узкие дома, галереи и мастерские. Вечером, когда уезжают туристы, здесь магия в чистом виде.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== 2. PLACES ===== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <span class="section-kicker">Интересные места рядом</span>
+    </div>
+
+    <!-- Place 1: Étretat -->
+    <div class="place-card" style="grid-template-columns: 1fr 400px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">1</div>
+          <div class="place-title-area">
+            <div class="place-name">Этрета (Étretat) — скалы и ощущение «Франции из кино»</div>
+            <div class="place-tags">
+              <span class="place-tag">Природа</span>
+              <span class="place-tag">Прогулки</span>
+              <span class="place-tag">Вид</span>
+            </div>
+          </div>
+          <div class="place-dist">~1–1 ч 15 мин<span>авто / автобус</span></div>
+        </div>
+
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Самые красивые меловые скалы-арки Франции — пейзаж Моне</li>
+            <li>Очень сильная визуальная точка — «вау» даже при коротком визите</li>
+            <li>Тропа вдоль обрыва наверху — один из лучших видов Нормандии</li>
+          </ul>
+        </div>
+
+        <div class="mini-label">Что делать</div>
+        <div class="do-wrap">
+          <span class="do-tag">↑ Подняться на скалу Авал</span>
+          <span class="do-tag">Тропа вдоль обрыва</span>
+          <span class="do-tag">Сад Этрета (авангардный)</span>
+          <span class="do-tag">Закат с верхней точки</span>
+        </div>
+
+        <div class="place-footer">
+          <div class="trans-note">🚆 Из Довиля: автобус 20 → Лизьё, поезд до Этрета нет — нужны автобус+такси или авто. <strong>Хороший кандидат для дня с машиной.</strong></div>
+        </div>
+      </div>
+      <div class="place-photos two-photos">
+        <img loading="lazy" src="build/ref/d48975170a033c9affe458433834fd04.webp" alt="Этрета">
+        <img loading="lazy" src="build/ref/3f0b90c64a6f8a24ece50815a7ef0947.webp" alt="Этрета">
+      </div>
+    </div>
+
+    <!-- Place 2: Honfleur -->
+    <div class="place-card" style="grid-template-columns: 1fr 400px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">2</div>
+          <div class="place-title-area">
+            <div class="place-name">Онфлёр (Honfleur) — маленький порт как открытка</div>
+            <div class="place-tags">
+              <span class="place-tag">Города</span>
+              <span class="place-tag">Архитектура</span>
+              <span class="place-tag">Музеи</span>
+            </div>
+          </div>
+          <div class="place-dist">~20–30 мин<span>авто / автобус</span></div>
+        </div>
+
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Один из самых красивых городков Франции — старая гавань Vieux Bassin</li>
+            <li>Церковь Сент-Катрин — единственная деревянная готическая церковь Франции (XV век)</li>
+            <li>Родина нормандского импрессионизма: Буден, Моне ходили сюда рисовать</li>
+          </ul>
+        </div>
+
+        <div class="mini-label">Что делать</div>
+        <div class="do-wrap">
+          <span class="do-tag">Порт Vieux Bassin</span>
+          <span class="do-tag">Церковь Сент-Катрин</span>
+          <span class="do-tag">Musée Eugène Boudin</span>
+          <span class="do-tag">Гулять без цели</span>
+          <span class="do-tag">Рынок по субботам</span>
+        </div>
+
+        <div class="place-footer">
+          <div class="trans-note">🚆 Прямые автобусы из Довиля / Трувиля ~30 мин. Или такси. Удобно без машины.</div>
+          <span class="price-chip">💶 Musée Boudin ~6€</span>
+        </div>
+      </div>
+      <div class="place-photos two-photos">
+        <img loading="lazy" src="build/normandy/port-vieux-bassin.webp" alt="Порт Vieux Bassin, Онфлёр">
+        <img loading="lazy" src="build/normandy/musee-eugene-boudin.webp" alt="Musée Eugène Boudin">
+      </div>
+    </div>
+
+    <!-- Place 3: Cabourg -->
+    <div class="place-card" style="grid-template-columns: 1fr 200px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">3</div>
+          <div class="place-title-area">
+            <div class="place-name">Кабур (Cabourg) — ретро Франция и длинный пляж</div>
+            <div class="place-tags">
+              <span class="place-tag">Пляж</span>
+              <span class="place-tag">Набережная</span>
+              <span class="place-tag">Архитектура</span>
+            </div>
+          </div>
+          <div class="place-dist">~30 мин<span>авто / поезд</span></div>
+        </div>
+
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Длинная красивая набережная Belle Époque — Пруст жил здесь и описал в романе</li>
+            <li>Спокойнее и менее туристично, чем Довиль</li>
+            <li>Одни из лучших песчаных пляжей Кальвадоса</li>
+          </ul>
+        </div>
+
+        <div class="mini-label">Что делать</div>
+        <div class="do-wrap">
+          <span class="do-tag">Promenade Marcel Proust</span>
+          <span class="do-tag">Пляж и купание</span>
+          <span class="do-tag">Grand Hôtel (Belle Époque)</span>
+          <span class="do-tag">Ужин у моря</span>
+        </div>
+
+        <div class="place-footer">
+          <div class="trans-note">🚆 Поезд из Довиля через Лизьё ~1 ч, или авто 30 мин напрямую вдоль берега.</div>
+        </div>
+      </div>
+      <div class="place-photos one-photo">
+        <img loading="lazy" src="build/normandy/cabourg.webp" alt="Кабур">
+      </div>
+    </div>
+
+    <!-- Place 4: Rouen -->
+    <div class="place-card" style="grid-template-columns: 1fr 200px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">4</div>
+          <div class="place-title-area">
+            <div class="place-name">Руан (Rouen) — город с характером и историей</div>
+            <div class="place-tags">
+              <span class="place-tag">История</span>
+              <span class="place-tag">Собор</span>
+              <span class="place-tag">Жанна д'Арк</span>
+            </div>
+          </div>
+          <div class="place-dist">~1 ч<span>поезд</span></div>
+        </div>
+
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Собор Notre-Dame — тот самый, серию которого писал Моне в разное время дня</li>
+            <li>Площадь Старого рынка — место сожжения Жанны д'Арк, современная церковь в форме опрокинутого корабля</li>
+            <li>Один из лучших старых городов Нормандии — фахверковые улочки XVI–XVII вв</li>
+          </ul>
+        </div>
+
+        <div class="mini-label">Что делать</div>
+        <div class="do-wrap">
+          <span class="do-tag">Собор (бесплатно)</span>
+          <span class="do-tag">Площадь Жанны д'Арк</span>
+          <span class="do-tag">Historial Jeanne d'Arc</span>
+          <span class="do-tag">Улица Gros-Horloge</span>
+          <span class="do-tag">Musée des Beaux-Arts</span>
+        </div>
+
+        <div class="place-footer">
+          <div class="trans-note">🚆 Прямой поезд из Довиля — ~1 ч. Можно без машины.</div>
+          <span class="price-chip">💶 Historial ~10€ · Beaux-Arts ~5€</span>
+        </div>
+      </div>
+      <div class="place-photos one-photo">
+        <img loading="lazy" src="build/normandy/rouen-cathedral.webp" alt="Руанский собор">
+      </div>
+    </div>
+
+    <!-- Place 5: Bayeux -->
+    <div class="place-card" style="grid-template-columns: 1fr 400px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">5</div>
+          <div class="place-title-area">
+            <div class="place-name">Байё (Bayeux) — гобелен и нормандские соборы</div>
+            <div class="place-tags">
+              <span class="place-tag">История</span>
+              <span class="place-tag">Музей</span>
+              <span class="place-tag">Собор</span>
+              <span class="place-tag">Юнеско</span>
+            </div>
+          </div>
+          <div class="place-dist">~1 ч<span>поезд</span></div>
+        </div>
+
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Гобелен Байё XI века — 70 метров вышивки о завоевании Англии, шедевр Юнеско</li>
+            <li>Один из лучших романских соборов Нормандии</li>
+            <li>Первый освобождённый город Франции в 1944 — хорошо сохранился</li>
+          </ul>
+        </div>
+
+        <div class="mini-label">Что делать</div>
+        <div class="do-wrap">
+          <span class="do-tag">Гобелен Байё</span>
+          <span class="do-tag">Собор Notre-Dame</span>
+          <span class="do-tag">Старый город</span>
+          <span class="do-tag">Рынок (сб утром)</span>
+        </div>
+
+        <div class="place-footer">
+          <div class="trans-note">🚆 Поезд из Довиля через Кан — ~1 ч 20 мин. Можно совместить с D-Day пляжами.</div>
+          <span class="price-chip">💶 Гобелен ~12€</span>
+        </div>
+      </div>
+      <div class="place-photos two-photos">
+        <img loading="lazy" src="build/normandy/bayeux.webp" alt="Байё">
+        <img loading="lazy" src="build/normandy/bayeux-notre-dame.webp" alt="Собор Байё Notre-Dame">
+      </div>
+    </div>
+
+    <!-- Place 6: D-Day -->
+    <div class="place-card" style="grid-template-columns: 1fr 200px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">6</div>
+          <div class="place-title-area">
+            <div class="place-name">Пляжи D-Day + Мемориал в Кане</div>
+            <div class="place-tags">
+              <span class="place-tag">История</span>
+              <span class="place-tag">Эмоции</span>
+              <span class="place-tag">Важно</span>
+            </div>
+          </div>
+          <div class="place-dist">~1.5–2 ч<span>поезд+автобус / авто</span></div>
+        </div>
+
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Омаха Бич — американское кладбище, 9 000 крестов. Очень сильное переживание</li>
+            <li>Мемориал в Кане — один из лучших музеев о Второй мировой войне в Европе</li>
+            <li>Понт-дю-Ок — американские рейнджеры брали скалы штурмом, сохранились траншеи и бункеры</li>
+          </ul>
+        </div>
+
+        <div class="mini-label">Что делать</div>
+        <div class="do-wrap">
+          <span class="do-tag">Омаха Бич</span>
+          <span class="do-tag">Мемориал Кан</span>
+          <span class="do-tag">Пуэнт-дю-Ок</span>
+          <span class="do-tag">Музей D-Day Omaha</span>
+        </div>
+
+        <div class="place-footer">
+          <div class="trans-note">🚆 Поезд до Кана ~1 ч, далее автобус или такси на пляжи. <strong>Идеально на арендованной машине.</strong></div>
+          <span class="price-chip">💶 Мемориал Кан ~20€ · Пляжи бесплатно</span>
+        </div>
+      </div>
+      <div class="place-photos one-photo">
+        <img loading="lazy" src="build/normandy/omaha-beach.webp" alt="Omaha Beach">
+      </div>
+    </div>
+
+    <!-- Place 7: Pont-l'Évêque / Beuvron -->
+    <div class="place-card" style="grid-template-columns: 1fr 400px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">7</div>
+          <div class="place-title-area">
+            <div class="place-name">Pont-l'Évêque / Beuvron-en-Auge — деревни Нормандии</div>
+            <div class="place-tags">
+              <span class="place-tag">Аутентика</span>
+              <span class="place-tag">Фахверк</span>
+              <span class="place-tag">Яблоки</span>
+              <span class="place-tag">Сидр</span>
+            </div>
+          </div>
+          <div class="place-dist">~20–40 мин<span>авто (автобус редко)</span></div>
+        </div>
+
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Бёврон-ан-Аж — одна из красивейших деревень Франции, фахверк XIV–XVI вв</li>
+            <li>Яблоневые сады — в сентябре урожай, аромат и цвет фантастические</li>
+            <li>Фермерские хозяйства сидра и кальвадоса — дегустации без туристов</li>
+          </ul>
+        </div>
+
+        <div class="mini-label">Что делать</div>
+        <div class="do-wrap">
+          <span class="do-tag">Деревня Бёврон</span>
+          <span class="do-tag">Фермы сидра</span>
+          <span class="do-tag">Купить сыры и яблоки</span>
+          <span class="do-tag">Сидеть в кафе</span>
+        </div>
+
+        <div class="place-footer">
+          <div class="trans-note">🚗 Нужна машина — общественный транспорт не доходит нормально. Идеально по пути к Этрета.</div>
+        </div>
+      </div>
+      <div class="place-photos two-photos">
+        <img loading="lazy" src="build/normandy/pont-leveque-cheese.webp" alt="Сыр Пон-л'Эвек">
+        <img loading="lazy" src="build/normandy/beuvron-en-auge.webp" alt="Бёврон-ан-Аж">
+      </div>
+    </div>
+
+    <!-- Place 8: Fromageries -->
+    <div class="place-card" style="grid-template-columns: 1fr 400px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">8</div>
+          <div class="place-title-area">
+            <div class="place-name">Сыроварни — камамбер, ливаро, пон-л'эвек</div>
+            <div class="place-tags">
+              <span class="place-tag">Гастрономия</span>
+              <span class="place-tag">Фермы</span>
+              <span class="place-tag">Дегустации</span>
+            </div>
+          </div>
+          <div class="place-dist">~40–75 мин<span>авто</span></div>
+        </div>
+
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Fromagerie Graindorge (Livarot) — действующая сыроварня, можно смотреть процесс изнутри</li>
+            <li>Maison du Camembert — музей + дегустация, купить прямо у производителя</li>
+            <li>Пон-л'Эвек — маленькие семейные фермы без туристов, сидр + сыр</li>
+          </ul>
+        </div>
+
+        <div class="mini-label">Гастрономический день на авто</div>
+        <div class="do-wrap">
+          <span class="do-tag">Пон-л'Эвек (20 мин)</span>
+          <span class="do-tag">Livarot / Graindorge (50 мин)</span>
+          <span class="do-tag">Camembert (75 мин)</span>
+          <span class="do-tag">Вернуться через Бёврон</span>
+        </div>
+
+        <div class="place-footer">
+          <div class="trans-note">🚗 Только на машине. Идеальный маршрут для одного дня аренды.</div>
+        </div>
+      </div>
+      <div class="place-photos two-photos">
+        <img loading="lazy" src="build/normandy/fromagerie-graindorge-livarot.webp" alt="Fromagerie Graindorge">
+        <img loading="lazy" src="build/normandy/maison-du-camembert.webp" alt="Maison du Camembert">
+      </div>
+    </div>
+
+    <!-- Place 9: Deauville / Trouville base -->
+    <div class="place-card" style="grid-template-columns: 1fr 200px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">9</div>
+          <div class="place-title-area">
+            <div class="place-name">Довиль / Трувиль — не недооценивай базу</div>
+            <div class="place-tags">
+              <span class="place-tag">Пляж</span>
+              <span class="place-tag">Рынок</span>
+              <span class="place-tag">Прогулки</span>
+              <span class="place-tag">Казино</span>
+            </div>
+          </div>
+          <div class="place-dist" style="color:var(--ink-lt)">Ваша база</div>
+        </div>
+
+        <div class="why-block">
+          <div class="mini-label">Что делать не выезжая</div>
+          <ul class="why-list">
+            <li>Рыбный рынок Трувиля — устрицы, моллюски, креветки прямо у воды по утрам</li>
+            <li>Пляж Довиля с «планшами» — полосатые кабинки с именами кинозвёзд</li>
+            <li>Les Franciscaines — бывший монастырь, ставший арт-центром с выставками и кафе</li>
+            <li>Казино и набережная вечером</li>
+          </ul>
+        </div>
+
+        <div class="place-footer">
+          <div class="trans-note">💡 На базу стоит закладывать 2 дня без выездов — особенно для мам-пенсионерок.</div>
+        </div>
+      </div>
+      <div class="place-photos one-photo">
+        <img loading="lazy" src="build/normandy/les-franciscaines.webp" alt="Les Franciscaines, Довиль">
+      </div>
+    </div>
+
+  </div><!-- /section places -->
+
+  <!-- ===== 3. SWIMMING ===== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <span class="section-kicker">Можно ли купаться?</span>
+    </div>
+
+    <div class="beach-grid">
+      <div class="beach-cell">
+        <div class="beach-name">Довиль и Трувиль</div>
+        <div class="beach-temp">18–21°C</div>
+        <div class="beach-desc">Песчаный пляж, удобный заход. Купаться можно. Это Ла-Манш, не Средиземное — вода освежающая, а не тёплая. Хорошо утром и на закате.</div>
+      </div>
+      <div class="beach-cell">
+        <div class="beach-name">Кабур</div>
+        <div class="beach-temp">18–20°C</div>
+        <div class="beach-desc">Длинный песчаный пляж, более дикий и просторный. Меньше отдыхающих, чем в Довиле. Идеально для прогулок босиком и спонтанного купания.</div>
+      </div>
+    </div>
+    <div class="beach-note">
+      Нормандское море — это <strong>опыт</strong>, а не «лежать весь день». Ожидайте освежающего купания, а не пляжного отдыха в средиземноморском стиле.
+    </div>
+  </div>
+
+  <!-- ===== 4. GASTRONOMY ===== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <span class="section-kicker">Гастрономия региона</span>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-cell">
+        <div class="info-icon">🦪</div>
+        <div class="info-name">Устрицы из Изиньи</div>
+        <div class="info-desc">В Трувиле прямо на рыбном рынке — дешевле и свежее, чем в ресторане</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-icon">🧀</div>
+        <div class="info-name">Камамбер, Ливаро, Пон-л'Эвек</div>
+        <div class="info-desc">Три великих нормандских сыра — на рынке обязательно</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-icon">🍎</div>
+        <div class="info-name">Сидр и кальвадос</div>
+        <div class="info-desc">Яблочный маршрут через деревни. Сентябрь — сбор урожая, свежий сидр</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-icon">🐟</div>
+        <div class="info-name">Sole normande</div>
+        <div class="info-desc">Камбала в сливочном соусе — главное блюдо Нормандии. В любом приличном ресторане</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-icon">🍶</div>
+        <div class="info-name">Moules-frites</div>
+        <div class="info-desc">Мидии с картофелем фри — бюджетно, сытно, очень по-нормандски</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-icon">🥮</div>
+        <div class="info-name">Tarte normande</div>
+        <div class="info-desc">Яблочный пирог со сливками. В каждой булочной — и каждый свой особенный</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 5. CAR DAYS ===== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <span class="section-kicker">Как использовать 1–2 дня с машиной</span>
+    </div>
+
+    <div class="car-days">
+      <div class="car-day">
+        <div class="car-day-icon">🚗</div>
+        <div>
+          <div class="car-day-title">День 1 — Гастрономический маршрут</div>
+          <div class="car-day-route">База → Пон-л'Эвек (20 мин) → Livarot / Graindorge (50 мин) → Бёврон-ан-Аж (60 мин) → Онфлёр на ужин (40 мин) → База</div>
+        </div>
+      </div>
+      <div class="car-day">
+        <div class="car-day-icon">🚗</div>
+        <div>
+          <div class="car-day-title">День 2 — История и природа</div>
+          <div class="car-day-route">База → Этрета (1 ч 15 мин) → Байё (1.5 ч) → Пляжи D-Day / Омаха Бич (20 мин от Байё) → Кан Мемориал (20 мин) → База</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 6. TIPS ===== -->
+
+</div><!-- /page-body -->
+</div>
+
+<!-- ========= ЭЛЬЗАС ========= -->
+<div class="region-panel" id="panel-alsace">
+<div class="region-hero">
+  <img loading="lazy" src="build/headers/alsace-old-town.webp" alt="Эльзас — старый город">
+  <div class="region-hero-overlay"></div>
+  <div class="region-hero-content">
+    <div class="region-hero-kicker">Регион II · Эльзас</div>
+    <div class="region-hero-title">Эльзас</div>
+    <div class="region-hero-subtitle">Route des Vins</div>
+    <div class="region-hero-tagline">Фахверковые деревни как с открытки, рислинг, средневековые замки и граница трёх стран.</div>
+  </div>
+</div>
+
+<!-- ========= PAGE BODY ========= -->
+<div class="page-body">
+
+  <!-- ===== 01. WHERE TO STAY ===== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <span class="section-kicker">Где жить — база</span>
+    </div>
+
+    <div class="base-grid">
+      <div class="base-card recommended">
+        <div class="base-badge">Рекомендуем</div>
+        <img loading="lazy" src="build/alsace/colmar.webp" alt="Колмар" style="">
+        <h3>Колмар (Colmar)</h3>
+        <p>«Маленькая Венеция» с каналами. Компактный, красивый, очень пешеходный. Квартал Пти-Венис — лучшие виды города. Для мам идеален — всё рядом, нет крутых подъёмов.</p>
+      </div>
+      <div class="base-card">
+        <img loading="lazy" src="build/alsace/strasburg1.webp" alt="Страсбург" style="">
+        <h3>Страсбург (Strasbourg)</h3>
+        <p>Столица Эльзаса. Грандиозный собор, квартал Пти-Франс, европейские институты. Больше отелей и ресторанов. Удобен как первый день после приезда из Парижа.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 02. INTERESTING PLACES ===== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <span class="section-kicker">Интересные места рядом</span>
+    </div>
+
+    <!-- Place 1: Страсбург -->
+    <div class="place-card" style="grid-template-columns: 1fr 400px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">1</div>
+          <div class="place-title-area">
+            <div class="place-name">Страсбургский собор — один из великих готических соборов Европы</div>
+            <div class="place-tags">
+              <span class="place-tag">Архитектура</span>
+              <span class="place-tag">Смотровая</span>
+              <span class="place-tag">История</span>
+            </div>
+          </div>
+          <div class="place-dist">~2 ч от Колмара<span>поезд 30 мин</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Строился 250 лет (XII–XV вв) — один из самых красивых готических соборов мира</li>
+            <li>Астрономические часы XIV века — бой часов в 12:30, зрелище для всех возрастов</li>
+            <li>Смотровая платформа: 332 ступени, вид на Вогезы и немецкий Шварцвальд</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">Собор (бесплатно)</span>
+          <span class="do-tag">Астрочасы в 12:30</span>
+          <span class="do-tag">Смотровая ~6€</span>
+          <span class="do-tag">Квартал Пти-Франс</span>
+          <span class="do-tag">Musée de l'Œuvre</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">🚆 Поезд Колмар → Страсбург 30 мин, каждые 30 мин. <strong>Без машины.</strong></div>
+        </div>
+      </div>
+      <div class="place-photos two-photos">
+        <img loading="lazy" src="build/alsace/strasbourg.webp" alt="Страсбург">
+        <img loading="lazy" src="build/alsace/strasbourg-cathedral.webp" alt="Страсбургский собор">
+      </div>
+    </div>
+
+    <!-- Place 2: Эгишем -->
+    <div class="place-card" style="grid-template-columns: 1fr 200px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">2</div>
+          <div class="place-title-area">
+            <div class="place-name">Éguisheim — лучшая деревня Франции</div>
+            <div class="place-tags">
+              <span class="place-tag">Деревни</span>
+              <span class="place-tag">Виноградники</span>
+              <span class="place-tag">Розы</span>
+            </div>
+          </div>
+          <div class="place-dist">~10 мин<span>авто / автобус</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Круговая средневековая планировка XIII века — уникальная в Европе</li>
+            <li>Каждый дом украшен розами — в сентябре ещё цветут</li>
+            <li>Лучшая деревня Франции по версии французов (2003)</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">Круговая прогулка</span>
+          <span class="do-tag">Пробовать рислинг</span>
+          <span class="do-tag">Кооператив Wolfberger</span>
+          <span class="do-tag">Фото на рассвете</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">🚌 Автобус из Колмара ~15 мин. Можно без машины. Или такси ~8€.</div>
+        </div>
+      </div>
+      <div class="place-photos one-photo">
+        <img loading="lazy" src="build/alsace/eguisheim.webp" alt="Эгишем">
+      </div>
+    </div>
+
+    <!-- Place 3: Route des Vins -->
+    <div class="place-card" style="grid-template-columns: 1fr 400px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">3</div>
+          <div class="place-title-area">
+            <div class="place-name">Route des Vins — Риквир, Кайзерсберг, Андлау</div>
+            <div class="place-tags">
+              <span class="place-tag">Виноградники</span>
+              <span class="place-tag">Деревни</span>
+              <span class="place-tag">Дегустации</span>
+            </div>
+          </div>
+          <div class="place-dist">~20–60 мин<span>авто или автобус</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Riquewihr — самая «открыточная» деревня, хорошо сохранившийся XV век</li>
+            <li>Kaysersberg — родина Альберта Швейцера, деревня с замком над виноградниками</li>
+            <li>Сентябрь — сбор винограда, можно попасть на Vendanges (праздник урожая)</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">Риквир — пешком</span>
+          <span class="do-tag">Кайзерсберг + замок</span>
+          <span class="do-tag">Дегустации рислинга</span>
+          <span class="do-tag">Vendanges (сентябрь)</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">🚌 Автобус из Колмара до основных деревень. На авто — идеальный маршрут: Эгишем → Риквир → Кайзерсберг за один день.</div>
+        </div>
+      </div>
+      <div class="place-photos two-photos">
+        <img loading="lazy" src="build/alsace/riquewihr.webp" alt="Риквир">
+        <img loading="lazy" src="build/alsace/vendanges.webp" alt="Сбор винограда">
+      </div>
+    </div>
+
+    <!-- Place 4: Замок О-Кёнигсбур -->
+    <div class="place-card" style="grid-template-columns: 1fr 200px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">4</div>
+          <div class="place-title-area">
+            <div class="place-name">Замок Haut-Kœnigsbourg — средневековое величие</div>
+            <div class="place-tags">
+              <span class="place-tag">Замок</span>
+              <span class="place-tag">Средневековье</span>
+              <span class="place-tag">Вид</span>
+            </div>
+          </div>
+          <div class="place-dist">~30 мин<span>авто</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Один из лучших средневековых замков Франции, идеально сохранён (реставрация 1900–08)</li>
+            <li>Панорама на долину Рейна с одной стороны и Вогезы с другой</li>
+            <li>Интерьеры с оружием, мебелью, кухней — ощущение живой истории</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">Полный осмотр замка</span>
+          <span class="do-tag">Смотровая башня</span>
+          <span class="do-tag">Деревня Шатно рядом</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">🚗 Без машины сложно — нужен автобус и такси. <strong>Хороший кандидат для дня с машиной.</strong></div>
+          <div class="price-chip">💶 ~12€/чел</div>
+        </div>
+      </div>
+      <div class="place-photos one-photo">
+        <img loading="lazy" src="build/alsace/haut-koenigsbourg.webp" alt="Замок О-Кёнигсбур">
+      </div>
+    </div>
+
+    <!-- Place 5: Базель -->
+    <div class="place-card" style="grid-template-columns: 1fr 400px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">5</div>
+          <div class="place-title-area">
+            <div class="place-name">Базель — три страны, лучшие музеи региона</div>
+            <div class="place-tags">
+              <span class="place-tag">Искусство</span>
+              <span class="place-tag">Архитектура</span>
+              <span class="place-tag">Швейцария</span>
+            </div>
+          </div>
+          <div class="place-dist">~30 мин<span>поезд</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Fondation Beyeler — один из лучших музеев импрессионизма в Европе (Моне, Сезанн, Пикассо)</li>
+            <li>Tri-point — точка пересечения Франции, Германии и Швейцарии</li>
+            <li>Архитектура Гери, Херцога, Занера — особый архитектурный маршрут</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">Fondation Beyeler</span>
+          <span class="do-tag">Старый город</span>
+          <span class="do-tag">Tri-point</span>
+          <span class="do-tag">Kunstmuseum Basel</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">🚆 Прямой поезд Колмар → Базель ~30 мин. Очень удобно без машины. <strong>Паспорт с собой.</strong></div>
+          <div class="price-chip">💶 Beyeler ~25–30€</div>
+        </div>
+      </div>
+      <div class="place-photos two-photos">
+        <img loading="lazy" src="build/alsace/basel.webp" alt="Базель">
+        <img loading="lazy" src="build/alsace/fondation-beyeler.webp" alt="Fondation Beyeler">
+      </div>
+    </div>
+
+    <!-- Place 6: Вогезы -->
+    <div class="place-card" style="grid-template-columns: 1fr 400px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">6</div>
+          <div class="place-title-area">
+            <div class="place-name">Вогезы — горные деревни и озёра</div>
+            <div class="place-tags">
+              <span class="place-tag">Природа</span>
+              <span class="place-tag">Пешие прогулки</span>
+              <span class="place-tag">Озёра</span>
+            </div>
+          </div>
+          <div class="place-dist">~45–60 мин<span>авто</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Озеро Жерарме — горное озеро в еловых лесах, купание возможно (для любителей)</li>
+            <li>Мюнстерская долина — сыры и фермы прямо у подножия гор</li>
+            <li>Route des Crêtes — гребневая дорога с видами на обе страны</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">Озеро Жерарме</span>
+          <span class="do-tag">Route des Crêtes</span>
+          <span class="do-tag">Мюнстер + сыры</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">🚗 Только на машине. <strong>Хороший второй день аренды:</strong> замок → Вогезы → деревня.</div>
+        </div>
+      </div>
+      <div class="place-photos two-photos">
+        <img loading="lazy" src="build/alsace/lac-gerardmer.webp" alt="Озеро Жерарме">
+        <img loading="lazy" src="build/alsace/route-des-cretes.webp" alt="Route des Crêtes">
+      </div>
+    </div>
+
+    <!-- Place 7: Музей Унтерлинден -->
+    <div class="place-card" style="grid-template-columns: 1fr 400px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">7</div>
+          <div class="place-title-area">
+            <div class="place-name">Музей Унтерлинден, Колмар — алтарь Грюневальда</div>
+            <div class="place-tags">
+              <span class="place-tag">Музей</span>
+              <span class="place-tag">Искусство</span>
+              <span class="place-tag">Важное</span>
+            </div>
+          </div>
+          <div class="place-dist">Ваша база<span>пешком</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему зайти</div>
+          <ul class="why-list">
+            <li>Изенгеймский алтарь — одно из важнейших произведений немецкой живописи, XVI век</li>
+            <li>Само здание: средневековый монастырь, соединённый с современным крылом</li>
+            <li>Не перегружен — 1.5–2 часа и ощущение «видел что-то важное»</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">Изенгеймский алтарь</span>
+          <span class="do-tag">Коллекция Рейна</span>
+          <span class="do-tag">Современная часть</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">Находится в самом Колмаре — идеально на первый вечер или дождливый день.</div>
+          <div class="price-chip">💶 ~13€/чел</div>
+        </div>
+      </div>
+      <div class="place-photos two-photos">
+        <img loading="lazy" src="build/alsace/musee-unterlinden.webp" alt="Музей Унтерлинден">
+        <img loading="lazy" src="build/alsace/isenheim-altarpiece.webp" alt="Изенгеймский алтарь">
+      </div>
+    </div>
+
+  </div><!-- /section 02 -->
+
+  <!-- ===== 03. GASTRONOMY ===== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <span class="section-kicker">Гастрономия региона</span>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-cell">
+        <div class="info-icon">🍷</div>
+        <div class="info-name">Рислинг и Гевюрцтраминер</div>
+        <div class="info-desc">Великие белые вина. Дегустации в кооперативах деревень — от 5€ за набор</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-icon">🫓</div>
+        <div class="info-name">Тарт фламбе (Flammekueche)</div>
+        <div class="info-desc">Эльзасская «пицца»: тонкое тесто, крем-фреш, лук, бекон. ~12–15€ в любой брасри</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-icon">🥬</div>
+        <div class="info-name">Шукрут (Choucroute)</div>
+        <div class="info-desc">Квашеная капуста с колбасами — традиционное блюдо, есть везде круглый год</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-icon">🧀</div>
+        <div class="info-name">Мюнстер с тмином</div>
+        <div class="info-desc">Острый мягкий сыр. Лучший на фермах Мюнстерской долины, к рислингу идеально</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-icon">🥧</div>
+        <div class="info-name">Кугельхопф</div>
+        <div class="info-desc">Эльзасский дрожжевой кекс с изюмом и миндалём — визитная карточка региона</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-icon">🍺</div>
+        <div class="info-name">Пиво Kronenbourg / Météor</div>
+        <div class="info-desc">Эльзас — пивной регион. Brasserie Meteor (основана 1640) — экскурсии и дегустации</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 04. CAR DAYS ===== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <span class="section-kicker">Как использовать 1–2 дня с машиной</span>
+    </div>
+
+    <div class="car-days">
+      <div class="car-day">
+        <div class="car-day-icon">🚗</div>
+        <div>
+          <div class="car-day-title">День 1 — Винный маршрут</div>
+          <div class="car-day-route">Колмар → Éguisheim (10 мин) → Riquewihr (25 мин) → Kaysersberg (35 мин) → Дегустация в кооперативе → Колмар</div>
+        </div>
+      </div>
+      <div class="car-day">
+        <div class="car-day-icon">🚗</div>
+        <div>
+          <div class="car-day-title">День 2 — Замок и горы</div>
+          <div class="car-day-route">Колмар → Haut-Kœnigsbourg (30 мин) → Мюнстер и сыры (45 мин) → Route des Crêtes (1 ч) → Озеро Жерарме → Колмар</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page-body -->
+</div>
+
+<!-- ========= ПРОВАНС ========= -->
+<div class="region-panel" id="panel-provence">
+<div class="region-hero">
+  <img loading="lazy" src="build/headers/ix-en-provence.webp" alt="Прованс — Экс-ан-Прованс">
+  <div class="region-hero-overlay"></div>
+  <div class="region-hero-content">
+    <div class="region-hero-kicker">Регион IV · Прованс</div>
+    <div class="region-hero-title">Прованс</div>
+    <div class="region-hero-subtitle">Lumière du Midi</div>
+    <div class="region-hero-tagline">Свет Сезанна, Средиземноморье, римские развалины и рынки с оливковым маслом — единственный регион с тёплым морем.</div>
+  </div>
+</div>
+
+<!-- ========= PAGE BODY ========= -->
+<div class="page-body">
+
+  <!-- ===== 01. WHERE TO STAY ===== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <span class="section-kicker">Где жить — база</span>
+    </div>
+
+    <div class="base-grid">
+      <div class="base-card recommended">
+        <div class="base-badge">Рекомендуем</div>
+        <img loading="lazy" src="build/provence/aix-en-provence.webp" alt="Экс-ан-Прованс">
+        <h3>Экс-ан-Прованс (Aix-en-Provence)</h3>
+        <p>Элегантный город фонтанов. Широкие платановые бульвары, ежедневный рынок, родина Сезанна. Спокойная база для поездок в Марсель, Арль, Кассис. Мамам понравится.</p>
+      </div>
+      <div class="base-card">
+        <img loading="lazy" src="build/provence/avignon.webp" alt="Авиньон">
+        <h3>Авиньон (Avignon)</h3>
+        <p>Средневековый город в стенах. Папский дворец — главная достопримечательность. Хорош как первая точка после приезда. Оттуда удобно в Арль и Люберон.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 02. INTERESTING PLACES ===== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <span class="section-kicker">Интересные места рядом</span>
+    </div>
+
+    <!-- Place 1: Папский дворец -->
+    <div class="place-card" style="grid-template-columns: 1fr 200px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">1</div>
+          <div class="place-title-area">
+            <div class="place-name">Папский дворец Авиньона — крупнейший готический дворец Европы</div>
+            <div class="place-tags">
+              <span class="place-tag">История</span>
+              <span class="place-tag">Архитектура</span>
+              <span class="place-tag">ЮНЕСКО</span>
+            </div>
+          </div>
+          <div class="place-dist">~30 мин от Экса<span>поезд</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>300 лет папской резиденции — здесь жили 9 пап (XIV век), пока Рим был в хаосе</li>
+            <li>Огромный готический дворец с фресками — самое впечатляющее средневековое здание Прованса</li>
+            <li>Мост Сен-Бенезе (pont d'Avignon) — тот самый из песни, над Роной</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">Дворец + аудиогид</span>
+          <span class="do-tag">Мост Сен-Бенезе</span>
+          <span class="do-tag">Роше-де-Дом (парк)</span>
+          <span class="do-tag">Старый город</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">🚆 Прямой поезд Экс → Авиньон ~30 мин. Без машины.</div>
+          <div class="price-chip">💶 Дворец ~14€ · Мост ~5€</div>
+        </div>
+      </div>
+      <div class="place-photos one-photo">
+        <img loading="lazy" src="build/provence/palais-des-papes.webp" alt="Папский дворец Авиньона">
+      </div>
+    </div>
+
+    <!-- Place 2: Арль -->
+    <div class="place-card" style="grid-template-columns: 1fr 400px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">2</div>
+          <div class="place-title-area">
+            <div class="place-name">Арль (Arles) — Рим и Ван Гог в одном городе</div>
+            <div class="place-tags">
+              <span class="place-tag">Римские руины</span>
+              <span class="place-tag">Искусство</span>
+              <span class="place-tag">ЮНЕСКО</span>
+            </div>
+          </div>
+          <div class="place-dist">~1 ч от Экса<span>поезд</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Римский амфитеатр I века до н.э. — до сих пор проводят корриду. Юнеско</li>
+            <li>Ван Гог прожил здесь год — написал 300 работ. Фонд Ван Гога открылся в 2014</li>
+            <li>Рынок в субботу утром — лучший рынок Прованса с фермерскими продуктами</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">Амфитеатр (I в. до н.э.)</span>
+          <span class="do-tag">Fondation Van Gogh</span>
+          <span class="do-tag">Рынок (суббота)</span>
+          <span class="do-tag">Театр Антик</span>
+          <span class="do-tag">Некрополь Алискан</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">🚆 Поезд Экс → Арль ~1 ч. Без машины.</div>
+          <div class="price-chip">💶 Амфитеатр ~9€ · Фонд Ван Гога ~12€</div>
+        </div>
+      </div>
+      <div class="place-photos two-photos">
+        <img loading="lazy" src="build/provence/arles.webp" alt="Арль">
+        <img loading="lazy" src="build/provence/fondation-van-gogh.webp" alt="Fondation Van Gogh">
+      </div>
+    </div>
+
+    <!-- Place 3: Кассис и Каланки -->
+    <div class="place-card" style="grid-template-columns: 1fr 400px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">3</div>
+          <div class="place-title-area">
+            <div class="place-name">Кассис и Каланки — бирюзовые фьорды Средиземноморья</div>
+            <div class="place-tags">
+              <span class="place-tag">Море</span>
+              <span class="place-tag">Природа</span>
+              <span class="place-tag">Уникально</span>
+            </div>
+          </div>
+          <div class="place-dist">~40 мин от Экса<span>поезд + автобус</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Каланки — белые известняковые фьорды над бирюзовым морем, нигде больше не увидите</li>
+            <li>Лодочная экскурсия из Кассиса — самый удобный вариант для группы</li>
+            <li>Кассис — очаровательный рыбацкий порт с хорошими ресторанами</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">Лодка в Каланки ~20€</span>
+          <span class="do-tag">Порт Кассиса</span>
+          <span class="do-tag">Марсельские вина</span>
+          <span class="do-tag">Пешая тропа GR98</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">🚆 Поезд Экс → Кассис ~40 мин. Летом автобус от станции. Или авто.</div>
+          <div class="price-chip">💶 Лодка ~20€/чел</div>
+        </div>
+      </div>
+      <div class="place-photos two-photos">
+        <img loading="lazy" src="build/provence/calanques.webp" alt="Каланки">
+        <img loading="lazy" src="build/provence/port-de-cassis.webp" alt="Порт Кассиса">
+      </div>
+    </div>
+
+    <!-- Place 4: Марсель -->
+    <div class="place-card" style="grid-template-columns: 1fr 200px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">4</div>
+          <div class="place-title-area">
+            <div class="place-name">Марсель — MuCEM и старый порт</div>
+            <div class="place-tags">
+              <span class="place-tag">Музей</span>
+              <span class="place-tag">Архитектура</span>
+              <span class="place-tag">Море</span>
+            </div>
+          </div>
+          <div class="place-dist">~30 мин от Экса<span>поезд</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>MuCEM — архитектура Рюди Риччотти: ажурный фасад над морем, ошеломительный вид</li>
+            <li>Старый порт (Vieux-Port) — живая точка города, рынок рыбы утром</li>
+            <li>Notre-Dame de la Garde — базилика на холме, лучшая панорама на город и острова</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">MuCEM</span>
+          <span class="do-tag">Vieux-Port</span>
+          <span class="do-tag">Notre-Dame de la Garde</span>
+          <span class="do-tag">Буйабес в Chez Fonfon</span>
+          <span class="do-tag">Острова Фриуль</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">🚆 Прямой поезд Экс → Марсель ~30 мин. Без машины.</div>
+          <div class="price-chip">💶 MuCEM ~11€ · Буйабес ~55–70€/чел</div>
+        </div>
+      </div>
+      <div class="place-photos one-photo">
+        <img loading="lazy" src="build/provence/mucem.webp" alt="MuCEM, Марсель">
+      </div>
+    </div>
+
+    <!-- Place 5: Горд и Сенанк -->
+    <div class="place-card" style="grid-template-columns: 1fr 200px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">5</div>
+          <div class="place-title-area">
+            <div class="place-name">Горд и аббатство Сенанк — Прованс с открытки</div>
+            <div class="place-tags">
+              <span class="place-tag">Деревни</span>
+              <span class="place-tag">Лаванда</span>
+              <span class="place-tag">Люберон</span>
+            </div>
+          </div>
+          <div class="place-dist">~1 ч от Авиньона<span>авто</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Горд стоит на скале — деревня буквально врастает в камень, вид фантастический</li>
+            <li>Аббатство Сенанк — XII век, окружено полями лаванды (в сентябре убрана, но поля красивы)</li>
+            <li>Рюссийон — дома из охристого камня, цвет меняется от жёлтого к красному</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">Горд + смотровая</span>
+          <span class="do-tag">Аббатство Сенанк</span>
+          <span class="do-tag">Рюссийон (охра)</span>
+          <span class="do-tag">Менерб / Лакост</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">🚗 Только на машине — общественный транспорт в Люберон редкий. <strong>Идеальный день аренды.</strong></div>
+        </div>
+      </div>
+      <div class="place-photos one-photo">
+        <img loading="lazy" src="build/provence/roussillon.webp" alt="Рюссийон">
+      </div>
+    </div>
+
+    <!-- Place 6: Пон-дю-Гар -->
+    <div class="place-card" style="grid-template-columns: 1fr 200px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">6</div>
+          <div class="place-title-area">
+            <div class="place-name">Пон-дю-Гар — римский акведук 2000 лет назад</div>
+            <div class="place-tags">
+              <span class="place-tag">Античность</span>
+              <span class="place-tag">Природа</span>
+              <span class="place-tag">ЮНЕСКО</span>
+            </div>
+          </div>
+          <div class="place-dist">~45 мин от Авиньона<span>авто / автобус</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Лучше сохранившийся римский акведук в мире — 49 метров высотой, I век н.э.</li>
+            <li>Юнеско. Купаться прямо под ним в реке Гар — в сентябре ещё возможно</li>
+            <li>Музей рядом объясняет римские технологии строительства</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">Акведук снизу</span>
+          <span class="do-tag">Купание в Гаре</span>
+          <span class="do-tag">Прогулка по верху</span>
+          <span class="do-tag">Музей</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">🚌 Автобус из Авиньона летом и в начале сентября. Авто удобнее.</div>
+          <div class="price-chip">💶 Парковка + вход ~10€ с машины</div>
+        </div>
+      </div>
+      <div class="place-photos one-photo">
+        <img loading="lazy" src="build/provence/pont-du-gard.webp" alt="Пон-дю-Гар">
+      </div>
+    </div>
+
+    <!-- Place 7: Ле-Бо и Карьер Люмьер -->
+    <div class="place-card" style="grid-template-columns: 1fr 200px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">7</div>
+          <div class="place-title-area">
+            <div class="place-name">Ле-Бо-де-Прованс + Carrières de Lumières</div>
+            <div class="place-tags">
+              <span class="place-tag">Деревня</span>
+              <span class="place-tag">Крепость</span>
+              <span class="place-tag">Медиа-арт</span>
+            </div>
+          </div>
+          <div class="place-dist">~45 мин от Авиньона<span>авто</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Ле-Бо — средневековая деревня на известняковой скале, развалины крепости</li>
+            <li>Carrières de Lumières — бывший карьер, иммерсивные проекции (Ван Гог, Сезанн)</li>
+            <li>Камарг рядом — фламинго, лошади, рисовые поля</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">Carrières de Lumières</span>
+          <span class="do-tag">Крепость Ле-Бо</span>
+          <span class="do-tag">Камарг (фламинго)</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">🚗 Только на машине. <strong>Хороший маршрут:</strong> Арль → Ле-Бо → Авиньон.</div>
+          <div class="price-chip">💶 Carrières ~22€/чел</div>
+        </div>
+      </div>
+      <div class="place-photos one-photo">
+        <img loading="lazy" src="build/provence/pont-de-gau.webp" alt="Камарг — Pont de Gau">
+      </div>
+    </div>
+
+    <!-- Place 8: Ателье Сезанна -->
+    <div class="place-card" style="grid-template-columns: 1fr 200px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">8</div>
+          <div class="place-title-area">
+            <div class="place-name">Ателье Сезанна и гора Сент-Виктуар</div>
+            <div class="place-tags">
+              <span class="place-tag">Искусство</span>
+              <span class="place-tag">Природа</span>
+              <span class="place-tag">Родина Сезанна</span>
+            </div>
+          </div>
+          <div class="place-dist">Ваша база<span>пешком / авто</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему идти</div>
+          <ul class="why-list">
+            <li>Мастерская Сезанна сохранилась почти нетронутой — его яблоки и черепа на месте</li>
+            <li>Гора Сент-Виктуар — мотив сотен его картин. Утром — розовая, в полдень — белая</li>
+            <li>Parcours Cézanne — маршрут по Эксу с точками, где он рисовал</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">Ателье Сезанна</span>
+          <span class="do-tag">Сент-Виктуар</span>
+          <span class="do-tag">Рынок Экса</span>
+          <span class="do-tag">Cours Mirabeau</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">Прямо в Эксе — идеально для первого или последнего дня.</div>
+          <div class="price-chip">💶 Ателье ~6€</div>
+        </div>
+      </div>
+      <div class="place-photos one-photo">
+        <img loading="lazy" src="build/provence/atelier-cezanne.webp" alt="Ателье Сезанна">
+      </div>
+    </div>
+
+  </div><!-- /section 02 -->
+
+  <!-- ===== 03. SEA & BEACHES ===== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <span class="section-kicker">Море и купание</span>
+    </div>
+
+    <div class="sea-note">
+      <div class="sea-note-title">Единственный регион с тёплым морем — Средиземное в сентябре</div>
+      <div class="sea-grid">
+        <div class="sea-item">
+          <div class="sea-item-name">Кассис — галечный пляж</div>
+          <div class="sea-item-temp">22–24°C</div>
+          <div class="sea-item-desc">Бирюзовая вода, хорошая видимость. Галька. Лучший для купания в регионе. Рядом Каланки.</div>
+        </div>
+        <div class="sea-item">
+          <div class="sea-item-name">Под Пон-дю-Гар</div>
+          <div class="sea-item-temp">21–23°C</div>
+          <div class="sea-item-desc">Купание в реке Гар прямо под древним акведуком — уникальный опыт. Течение слабое, дно песок.</div>
+        </div>
+      </div>
+      <div class="sea-footer">
+        Прованс — единственный из четырёх регионов с тёплым Средиземным морем в сентябре. +22–24°C — комфортно плавать.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 04. GASTRONOMY ===== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <span class="section-kicker">Гастрономия региона</span>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-cell">
+        <div class="info-icon">🍲</div>
+        <div class="info-name">Буйабес</div>
+        <div class="info-desc">Марсельский рыбный суп-ритуал. В настоящем ресторане ~55–70€/чел, но это событие</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-icon">🫒</div>
+        <div class="info-name">Оливковое масло и тапенад</div>
+        <div class="info-desc">На рынке Экса — десятки сортов. Тапенад из оливок, каперсов, анчоусов — лучший сувенир</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-icon">🍷</div>
+        <div class="info-name">Розе Прованса</div>
+        <div class="info-desc">АОС Кото-д'Экс. Дегустации на виноградниках у Лез-Бо или Кассиса</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-icon">🍬</div>
+        <div class="info-name">Каллиссоны d'Aix</div>
+        <div class="info-desc">Миндальная конфета с дыней, с XV века. В любой кондитерской Экса — главный сувенир</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-icon">🌿</div>
+        <div class="info-name">Прованские травы и соки</div>
+        <div class="info-desc">Тимьян, розмарин, лаванда — живые с фермерских рынков. Самые ароматные</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-icon">🧁</div>
+        <div class="info-name">Нуга из Монтелимара</div>
+        <div class="info-desc">1 час от Авиньона — «столица» нуги. По дороге в регион заехать за коробкой</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 05. CAR DAYS ===== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <span class="section-kicker">Как использовать 1–2 дня с машиной</span>
+    </div>
+
+    <div class="car-days">
+      <div class="car-day">
+        <div class="car-day-icon">🚗</div>
+        <div>
+          <div class="car-day-title">День 1 — Люберон: деревни и охра</div>
+          <div class="car-day-route">Авиньон → Горд (1 ч) → Аббатство Сенанк (10 мин) → Рюссийон (15 мин) → Менерб → Авиньон</div>
+        </div>
+      </div>
+      <div class="car-day">
+        <div class="car-day-icon">🚗</div>
+        <div>
+          <div class="car-day-title">День 2 — Камарг и Ле-Бо</div>
+          <div class="car-day-route">Авиньон → Арль (45 мин) → Камарг / фламинго (30 мин) → Ле-Бо и Carrières (30 мин) → Авиньон</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page-body -->
+</div>
+
+<!-- ========= ЛУАРА ========= -->
+<div class="region-panel" id="panel-loire">
+<div class="region-hero">
+  <img loading="lazy" src="build/headers/loire-valley.webp" alt="Долина Луары">
+  <div class="region-hero-overlay"></div>
+  <div class="region-hero-content">
+    <div class="region-hero-kicker">Регион III · Долина Луары</div>
+    <div class="region-hero-title">Долина Луары</div>
+    <div class="region-hero-subtitle">Châteaux &amp; Jardins</div>
+    <div class="region-hero-tagline">300 замков, Леонардо да Винчи, пещерные погреба с вином и самые красивые сады Франции.</div>
+  </div>
+</div>
+
+<!-- ========= PAGE BODY ========= -->
+<div class="page-body">
+
+  <!-- ===== 01. WHERE TO STAY ===== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <span class="section-kicker">Где жить — база</span>
+    </div>
+
+    <div class="base-grid">
+      <div class="base-card recommended">
+        <div class="base-badge">Рекомендуем</div>
+        <img loading="lazy" src="build/loire/amboise2.webp" alt="Амбуаз">
+        <h3>Амбуаз (Amboise)</h3>
+        <p>Замок прямо над городом. Здесь умер Леонардо да Винчи — его дом в 500 метрах от центра. Маленький, живой, красивый. Идеальная база: тихо, но всё рядом.</p>
+      </div>
+      <div class="base-card">
+        <img loading="lazy" src="build/loire/tours-2.webp" alt="Тур">
+        <h3>Тур (Tours)</h3>
+        <p>Крупный университетский город. Больше отелей и ресторанов всех ценовых категорий. Удобнее как хаб для радиальных выездов. 20 мин до Амбуаза.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 02. INTERESTING PLACES ===== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <span class="section-kicker">Интересные места рядом</span>
+    </div>
+
+    <!-- Place 1: Шенонсо -->
+    <div class="place-card" style="grid-template-columns: 1fr 200px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">1</div>
+          <div class="place-title-area">
+            <div class="place-name">Château de Chenonceau — замок над рекой</div>
+            <div class="place-tags">
+              <span class="place-tag">Замок</span>
+              <span class="place-tag">Сады</span>
+              <span class="place-tag">ЮНЕСКО</span>
+            </div>
+          </div>
+          <div class="place-dist">~30 мин<span>поезд или авто</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Перекинут через реку Шер — ни один другой замок Франции так не стоит</li>
+            <li>Самый посещаемый замок Франции после Версаля — и заслуженно</li>
+            <li>Два сада: Дианы де Пуатье и Екатерины Медичи — ухоженные партеры</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">Галерея над водой</span>
+          <span class="do-tag">Оба сада</span>
+          <span class="do-tag">Лодка по Шеру</span>
+          <span class="do-tag">Интерьеры замка</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">🚆 Поезд Амбуаз → Шенонсо ~20 мин (пересадка в Туре). Или авто 30 мин прямо.</div>
+          <div class="price-chip">💶 ~15€/чел</div>
+        </div>
+      </div>
+      <div class="place-photos one-photo">
+        <img loading="lazy" src="build/loire/chateau-de-chenonceau.webp" alt="Шенонсо">
+      </div>
+    </div>
+
+    <!-- Place 2: Шамбор -->
+    <div class="place-card" style="grid-template-columns: 1fr 200px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">2</div>
+          <div class="place-title-area">
+            <div class="place-name">Château de Chambord — самый грандиозный замок Луары</div>
+            <div class="place-tags">
+              <span class="place-tag">Замок</span>
+              <span class="place-tag">Лес</span>
+              <span class="place-tag">Леонардо</span>
+            </div>
+          </div>
+          <div class="place-dist">~45 мин<span>авто (нет поезда)</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>440 залов, 365 каминов, 13 000 га парка — крупнейший замок Луары</li>
+            <li>Двойная спираль лестницы — приписывают проекту Леонардо да Винчи</li>
+            <li>Сентябрь: сезон охоты — олени в парке по вечерам (сафари-маршрут)</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">Двойная лестница</span>
+          <span class="do-tag">Крыша-терраса</span>
+          <span class="do-tag">Сафари с оленями</span>
+          <span class="do-tag">Лодка по каналу</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">🚗 Без машины сложно — нет прямого поезда. <strong>Идеален для дня с арендой.</strong> Автобус-шаттл из Блуа летом.</div>
+          <div class="price-chip">💶 ~14€/чел</div>
+        </div>
+      </div>
+      <div class="place-photos one-photo">
+        <img loading="lazy" src="build/loire/chateau-de-chambord.webp" alt="Шамбор">
+      </div>
+    </div>
+
+    <!-- Place 3: Клозери Клу -->
+    <div class="place-card" style="grid-template-columns: 1fr 200px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">3</div>
+          <div class="place-title-area">
+            <div class="place-name">Clos Lucé — дом и мастерская Леонардо да Винчи</div>
+            <div class="place-tags">
+              <span class="place-tag">Музей</span>
+              <span class="place-tag">Изобретения</span>
+              <span class="place-tag">История</span>
+            </div>
+          </div>
+          <div class="place-dist">Ваша база<span>пешком, Амбуаз</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему идти</div>
+          <ul class="why-list">
+            <li>Последние 3 года жизни Леонардо провёл именно здесь — по приглашению Франциска I</li>
+            <li>Его изобретения в натуральную величину: прообразы вертолёта, танка, моста</li>
+            <li>Сад, мастерская, интерьеры эпохи — очень живое ощущение</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">Мастерская</span>
+          <span class="do-tag">Машины Леонардо</span>
+          <span class="do-tag">Часовня с могилой</span>
+          <span class="do-tag">Аудиогид</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">Находится в Амбуазе — пешком от центра. Идеально на первый день.</div>
+          <div class="price-chip">💶 ~17€/чел</div>
+        </div>
+      </div>
+      <div class="place-photos one-photo">
+        <img loading="lazy" src="build/loire/chateau-du-clos-luce.webp" alt="Clos Lucé">
+      </div>
+    </div>
+
+    <!-- Place 4: Вилландри -->
+    <div class="place-card" style="grid-template-columns: 1fr 200px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">4</div>
+          <div class="place-title-area">
+            <div class="place-name">Château de Villandry — сады-шедевры Ренессанса</div>
+            <div class="place-tags">
+              <span class="place-tag">Сады</span>
+              <span class="place-tag">Геометрия</span>
+              <span class="place-tag">Красота</span>
+            </div>
+          </div>
+          <div class="place-dist">~45 мин<span>авто или автобус</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Самые красивые французские сады в стиле Ренессанс — геометрические партеры</li>
+            <li>Потагер — декоративный огород: капуста, тыква и артишоки в орнаментах</li>
+            <li>Сентябрь — пик красоты: урожай, осенние цвета, меньше туристов</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">Сады (3 уровня)</span>
+          <span class="do-tag">Потагер-огород</span>
+          <span class="do-tag">Замок изнутри</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">🚌 Автобус из Тура, или авто 45 мин. <strong>Можно совместить с Азе-ле-Ридо рядом.</strong></div>
+          <div class="price-chip">💶 ~12€ (только сады)</div>
+        </div>
+      </div>
+      <div class="place-photos one-photo">
+        <img loading="lazy" src="build/loire/chateau-de-villandry.webp" alt="Вилландри">
+      </div>
+    </div>
+
+    <!-- Place 5: Замок Амбуаз -->
+    <div class="place-card" style="grid-template-columns: 1fr 200px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">5</div>
+          <div class="place-title-area">
+            <div class="place-name">Замок Амбуаз и королевская часовня</div>
+            <div class="place-tags">
+              <span class="place-tag">Замок</span>
+              <span class="place-tag">История</span>
+              <span class="place-tag">Прямо в базе</span>
+            </div>
+          </div>
+          <div class="place-dist">Ваша база<span>пешком</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему идти</div>
+          <ul class="why-list">
+            <li>Резиденция Карла VIII и Франциска I — эпоха французского Ренессанса</li>
+            <li>Часовня Сент-Юбер — могила Леонардо да Винчи</li>
+            <li>Вид на Луару с террасы — один из лучших в регионе</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">Часовня / могила</span>
+          <span class="do-tag">Терраса над Луарой</span>
+          <span class="do-tag">Королевские залы</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">Прямо в центре Амбуаза — сочетайте с Clos Lucé в один день.</div>
+          <div class="price-chip">💶 ~14€/чел</div>
+        </div>
+      </div>
+      <div class="place-photos one-photo">
+        <img loading="lazy" src="build/loire/chateau-amboise.webp" alt="Замок Амбуаз — вид">
+      </div>
+    </div>
+
+    <!-- Place 6: Пещеры -->
+    <div class="place-card" style="grid-template-columns: 1fr 200px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">6</div>
+          <div class="place-title-area">
+            <div class="place-name">Троглодитные пещеры — жизнь в туфовых скалах</div>
+            <div class="place-tags">
+              <span class="place-tag">Необычно</span>
+              <span class="place-tag">Пещеры</span>
+              <span class="place-tag">Погреба</span>
+            </div>
+          </div>
+          <div class="place-dist">~10–20 мин<span>авто / велосипед</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Уникальное явление — тысячи домов и погребов, вырезанных прямо в туфовых скалах</li>
+            <li>Пещерная деревня Рошмениье — музей под открытым небом (XIV–XX вв)</li>
+            <li>Пещерные винодельни Вуврэ: дегустация игристого в настоящих погребах</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">Рошмениье (деревня)</span>
+          <span class="do-tag">Погреба Вуврэ</span>
+          <span class="do-tag">Дегустация игристого</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">🚲 Вдоль Луары — отличный велосипедный маршрут. Авто тоже удобно.</div>
+          <div class="price-chip">💶 Рошмениье ~7€</div>
+        </div>
+      </div>
+      <div class="place-photos one-photo">
+        <img loading="lazy" src="build/loire/rochemenier-village-troglodyte.webp" alt="Пещерная деревня Рошмениье">
+      </div>
+    </div>
+
+    <!-- Place 7: Азе-ле-Ридо -->
+    <div class="place-card" style="grid-template-columns: 1fr 200px;">
+      <div class="place-left">
+        <div class="place-top">
+          <div class="place-num-big">7</div>
+          <div class="place-title-area">
+            <div class="place-name">Azay-le-Rideau — замок в воде</div>
+            <div class="place-tags">
+              <span class="place-tag">Замок</span>
+              <span class="place-tag">Отражения</span>
+              <span class="place-tag">Ренессанс</span>
+            </div>
+          </div>
+          <div class="place-dist">~30 мин<span>поезд / авто</span></div>
+        </div>
+        <div class="why-block">
+          <div class="mini-label">Почему ехать</div>
+          <ul class="why-list">
+            <li>Один из самых изящных замков — стоит в воде, отражение безупречное</li>
+            <li>Ренессансный стиль в чистом виде: лестницы, декор, пропорции</li>
+            <li>Вечерние light show (сын-э-люмьер) в сентябре — замок подсвечен</li>
+          </ul>
+        </div>
+        <div class="do-wrap">
+          <span class="do-tag">Замок изнутри</span>
+          <span class="do-tag">Парк у воды</span>
+          <span class="do-tag">Son et Lumière вечером</span>
+        </div>
+        <div class="place-footer">
+          <div class="trans-note">🚆 Прямой поезд из Тура ~30 мин. Можно без машины. <strong>Удобно совместить с Вилландри (авто).</strong></div>
+          <div class="price-chip">💶 ~12€/чел</div>
+        </div>
+      </div>
+      <div class="place-photos one-photo">
+        <img loading="lazy" src="build/loire/azay-le-rideau.webp" alt="Азе-ле-Ридо">
+      </div>
+    </div>
+
+  </div><!-- /section 02 -->
+
+  <!-- ===== 03. GASTRONOMY ===== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <span class="section-kicker">Гастрономия региона</span>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-cell">
+        <div class="info-icon">🍷</div>
+        <div class="info-name">Вуврэ и Совиньон de Touraine</div>
+        <div class="info-desc">Игристый Вуврэ из пещерных погребов — особый опыт. Дегустации прямо в тоннелях</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-icon">🥩</div>
+        <div class="info-name">Риет de Tours</div>
+        <div class="info-desc">Паштет из свинины медленного приготовления — визитная карточка Тура. С хлебом бриошь</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-icon">🧀</div>
+        <div class="info-name">Сент-Мор-де-Турень</div>
+        <div class="info-desc">Козий сыр с соломкой внутри — АОС, продаётся на любом рынке. Лучший с рислингом</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-icon">🍮</div>
+        <div class="info-name">Тарт Татен</div>
+        <div class="info-desc">Яблочный пирог навыворот — изобретён именно здесь. В каждой булочной свой вариант</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-icon">🌰</div>
+        <div class="info-name">Прюно и шампиньоны</div>
+        <div class="info-desc">Туреньские сливы и шампиньоны из пещер — растут прямо в туфовых тоннелях</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-icon">🧁</div>
+        <div class="info-name">Нуга de Tours</div>
+        <div class="info-desc">Местная нуга с орехами — сувенир, который реально вкусный</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 04. CAR DAYS ===== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <span class="section-kicker">Как использовать 1–2 дня с машиной</span>
+    </div>
+
+    <div class="car-days">
+      <div class="car-day">
+        <div class="car-day-icon">🚗</div>
+        <div>
+          <div class="car-day-title">День 1 — Большие замки</div>
+          <div class="car-day-route">Амбуаз → Шамбор (45 мин) → Блуа (20 мин) → Шеверни (15 мин) → Амбуаз</div>
+        </div>
+      </div>
+      <div class="car-day">
+        <div class="car-day-icon">🚗</div>
+        <div>
+          <div class="car-day-title">День 2 — Сады и пещеры</div>
+          <div class="car-day-route">Амбуаз → Вилландри (45 мин) → Азе-ле-Ридо (10 мин) → Погреба Вуврэ (30 мин) → Амбуаз</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page-body -->
+</div>
+
+
+<script>
+(function () {
+  var tabs    = document.querySelectorAll('.tab-btn');
+  var panels  = document.querySelectorAll('.region-panel');
+
+  function activate(id) {
+    tabs.forEach(function(btn) {
+      btn.classList.toggle('active', btn.dataset.tab === id);
+    });
+    panels.forEach(function(panel) {
+      panel.classList.toggle('active', panel.id === 'panel-' + id);
+    });
+    history.replaceState(null, '', '#' + id);
+    window.scrollTo(0, 0);
+  }
+
+  tabs.forEach(function(btn) {
+    btn.addEventListener('click', function() { activate(btn.dataset.tab); });
+  });
+
+  // Читаем hash из URL (чтобы работали прямые ссылки)
+  var hash = location.hash.replace('#', '');
+  var ids  = Array.from(tabs).map(function(b){ return b.dataset.tab; });
+  activate(ids.indexOf(hash) !== -1 ? hash : ids[0]);
+})();
+</script>
+
+</body>
+</html>

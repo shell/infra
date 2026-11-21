@@ -1,0 +1,8 @@
+---
+# Shared variables for all hosts
+
+# Telegram notifications (reuses existing AlertManager bot)
+telegram:
+  bot_token: "{{ lookup('env', 'SF_TELEGRAM_BOT_TOKEN') }}"
+  chat_id: "{{ lookup('env', 'SF_TELEGRAM_CHAT_ID') }}"
+  api_url: "https://api.telegram.org"

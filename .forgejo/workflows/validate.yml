@@ -1,0 +1,113 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-yaml:
+    name: Lint YAML
+    runs-on: docker
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install yamllint
+        run: apt-get update -qq && apt-get install -y -qq yamllint
+
+      - name: Lint YAML files
+        run: |
+          yamllint -d "{extends: relaxed, rules: {line-length: disable, truthy: disable}}" \
+            cluster/ --no-warnings
+
+  # Host job: needs the docker CLI, which the job container doesn't have.
+  # Safe on the host because only the repo owner can push to Forgejo.
+  validate-compose:
+    name: Validate Docker Compose
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Find and validate compose files
+        run: |
+          echo "Validating Docker Compose files..."
+          ERRORS=0
+
+          for file in $(find cluster -name "compose.yml" -o -name "compose.yaml" -o -name "docker-compose.yml" -o -name "docker-compose.yaml" 2>/dev/null); do
+            echo "Checking: $file"
+            dir="${file%/*}"
+            env_created=false
+
+            # If .env.example exists but .env doesn't, create temporary .env
+            if [ -f "$dir/.env.example" ] && [ ! -f "$dir/.env" ]; then
+              cp "$dir/.env.example" "$dir/.env"
+              env_created=true
+            fi
+
+            if ! docker compose -f "$file" config --quiet 2>/dev/null; then
+              echo "ERROR: $file failed validation"
+              ERRORS=$((ERRORS + 1))
+            fi
+
+            # Clean up temporary .env
+            if [ "$env_created" = true ]; then
+              rm -f "$dir/.env"
+            fi
+          done
+
+          if [ $ERRORS -gt 0 ]; then
+            echo "Found $ERRORS invalid compose file(s)"
+            exit 1
+          fi
+          echo "All compose files valid!"
+
+  # Host job: ansible + collections are already installed on the runner VM
+  validate-ansible:
+    name: Validate Ansible
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Ansible collections
+        working-directory: ansible
+        run: ansible-galaxy collection install -r requirements.yml
+
+      - name: Validate Ansible syntax
+        working-directory: ansible
+        run: ansible-playbook --syntax-check playbooks/*.yml
+
+  security-scan:
+    name: Security Scan
+    runs-on: docker
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for secrets in code
+        run: |
+          echo "Scanning for potential secrets..."
+          PATTERNS=(
+            'password\s*[:=]\s*["\x27][^"\x27]+["\x27]'
+            'api[_-]?key\s*[:=]\s*["\x27][^"\x27]+["\x27]'
+            'secret\s*[:=]\s*["\x27][^"\x27]+["\x27]'
+            'token\s*[:=]\s*["\x27][^"\x27]+["\x27]'
+          )
+
+          FOUND=0
+          for pattern in "${PATTERNS[@]}"; do
+            # Exclude .env.example, .env.enc, and documentation
+            if grep -riE "$pattern" cluster/ ansible/ \
+                --include="*.yml" --include="*.yaml" \
+                --exclude="*.example" --exclude="*.enc" \
+                --exclude="*.md" 2>/dev/null | \
+                grep -v '\${' | grep -v 'your_' | grep -v 'change_this'; then
+              FOUND=1
+            fi
+          done
+
+          if [ $FOUND -eq 1 ]; then
+            echo "WARNING: Potential secrets found in code. Please review."
+            # Don't fail, just warn - some false positives expected
+          else
+            echo "No obvious secrets found in tracked files."
+          fi

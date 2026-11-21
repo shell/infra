@@ -1,0 +1,23 @@
+name: Maintenance (weekly)
+
+on:
+  schedule:
+    - cron: "0 4 * * 0"   # Sunday 4am UTC — docker-cleanup + host-cleanup
+
+jobs:
+  cleanup:
+    name: Weekly cleanup (docker + host)
+    runs-on: self-hosted
+    env:
+      SF_TELEGRAM_BOT_TOKEN: ${{ secrets.SF_TELEGRAM_BOT_TOKEN }}
+      SF_TELEGRAM_CHAT_ID: ${{ secrets.SF_TELEGRAM_CHAT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Docker cleanup
+        working-directory: ansible
+        run: ansible-playbook playbooks/docker-cleanup.yml -e notify_telegram=true
+
+      - name: Host cleanup
+        working-directory: ansible
+        run: ansible-playbook playbooks/host-cleanup.yml -e notify_telegram=true

@@ -1,0 +1,29 @@
+# Production deployment pinned to the published master commit.
+# Override PENK_IN_TAG in the VPS .env file for an emergency rollback.
+services:
+  penk-in:
+    image: ghcr.io/shell/penk.in:${PENK_IN_TAG:-4e73aede4ba667bd2a3bcd4ea25247d3443d2af7}
+    container_name: penk-in
+    restart: unless-stopped
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.penk-in.rule=Host(`penk.in`)"
+      - "traefik.http.routers.penk-in.entrypoints=https"
+      - "traefik.http.routers.penk-in.tls.certresolver=cloudflare"
+      - "traefik.http.routers.penk-in.service=penk-in"
+      - "traefik.http.routers.penk-in-alias.rule=Host(`new.penk.in`) || Host(`www.penk.in`)"
+      - "traefik.http.routers.penk-in-alias.entrypoints=https"
+      - "traefik.http.routers.penk-in-alias.tls.certresolver=cloudflare"
+      - "traefik.http.routers.penk-in-alias.service=penk-in"
+      - "traefik.http.routers.penk-in-alias.middlewares=penk-in-apex"
+      - 'traefik.http.middlewares.penk-in-apex.redirectregex.regex=^https://(new|www)\.penk\.in/(.*)'
+      - 'traefik.http.middlewares.penk-in-apex.redirectregex.replacement=https://penk.in/$${2}'
+      - "traefik.http.middlewares.penk-in-apex.redirectregex.permanent=true"
+      - "traefik.http.services.penk-in.loadbalancer.server.port=80"
+      - "traefik.docker.network=proxy"
+
+networks:
+  proxy:
+    external: true

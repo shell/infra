@@ -1,0 +1,53 @@
+---
+# Configure hosts to trust the SSH Certificate Authority
+#
+# Usage:
+#   All hosts:    ansible-playbook playbooks/configure-ssh-ca.yml
+#   Single host:  ansible-playbook playbooks/configure-ssh-ca.yml -l servarr
+#   With sudo:    ansible-playbook playbooks/configure-ssh-ca.yml -K
+
+- name: Configure SSH Certificate Authority trust
+  hosts: all
+  become: yes
+  vars:
+    ca_public_key_src: "{{ playbook_dir }}/../ssh-ca/ca_key.pub"
+    ca_public_key_dest: /etc/ssh/ca_user_key.pub
+
+  tasks:
+    - name: Check if CA public key exists locally
+      ansible.builtin.stat:
+        path: "{{ ca_public_key_src }}"
+      delegate_to: localhost
+      become: no
+      register: ca_key_stat
+
+    - name: Fail if CA public key not found
+      ansible.builtin.fail:
+        msg: |
+          CA public key not found at {{ ca_public_key_src }}
+          Run scripts/setup-ssh-ca.sh first to create the CA
+      when: not ca_key_stat.stat.exists
+
+    - name: Copy CA public key to host
+      ansible.builtin.copy:
+        src: "{{ ca_public_key_src }}"
+        dest: "{{ ca_public_key_dest }}"
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart sshd
+
+    - name: Configure sshd to trust CA
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?TrustedUserCAKeys'
+        line: "TrustedUserCAKeys {{ ca_public_key_dest }}"
+        state: present
+        validate: '/usr/sbin/sshd -t -f %s'
+      notify: Restart sshd
+
+  handlers:
+    - name: Restart sshd
+      ansible.builtin.service:
+        name: ssh
+        state: restarted

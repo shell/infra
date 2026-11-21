@@ -1,0 +1,14 @@
+---
+# Galaxy collections used by the playbooks. Pinned for reproducible runs;
+# bump versions here in a commit to upgrade.
+#
+# Install: ansible-galaxy collection install -r requirements.yml
+collections:
+  - name: prometheus.prometheus
+    version: 0.30.2
+  - name: community.beszel
+    version: 2.1.0
+  - name: community.general
+    version: ">=9.0.0"
+  - name: ansible.posix
+    version: ">=1.5.0"

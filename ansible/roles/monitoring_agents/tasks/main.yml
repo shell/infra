@@ -1,0 +1,59 @@
+---
+- name: Check that every requested agent is defined
+  ansible.builtin.assert:
+    that: (role_path + '/agents/' + item + '/main.yml') is file
+    fail_msg: "Unknown monitoring agent '{{ item }}' — expected {{ role_path }}/agents/{{ item }}/main.yml"
+    quiet: true
+  loop: "{{ monitoring_agents }}"
+
+# prometheus.prometheus roles unpack release archives on the controller and
+# need GNU tar (macOS: `brew install gnu-tar`, picked up as `gtar`). Fail
+# before any legacy agent gets removed.
+- name: Check controller has GNU tar
+  ansible.builtin.shell: (gtar --version || tar --version) 2>/dev/null | head -1
+  register: _controller_tar
+  delegate_to: localhost
+  become: false
+  run_once: true
+  changed_when: false
+  check_mode: false
+  failed_when: "'GNU tar' not in _controller_tar.stdout"
+  when: "'node_exporter' in monitoring_agents"
+
+- name: Decrypt monitoring secrets on the controller
+  ansible.builtin.command: sops --decrypt "{{ monitoring_secrets_file }}"
+  register: _monitoring_secrets_raw
+  delegate_to: localhost
+  become: false
+  run_once: true
+  changed_when: false
+  check_mode: false
+  no_log: true
+
+- name: Load monitoring secrets
+  ansible.builtin.set_fact:
+    monitoring_secrets: "{{ _monitoring_secrets_raw.stdout | from_yaml }}"
+  no_log: true
+
+# Agents are native systemd services; Docker is optional. When present it is
+# used for container stats and to clean up the old Docker-based agents.
+- name: Detect Docker
+  ansible.builtin.command: docker --version
+  register: _docker_version
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Record host capabilities
+  ansible.builtin.set_fact:
+    monitoring_has_docker: "{{ _docker_version.rc == 0 }}"
+
+- name: Deploy agents
+  ansible.builtin.include_tasks: agent.yml
+  loop: "{{ monitoring_agents }}"
+  loop_control:
+    loop_var: monitoring_agent
+
+- name: Publish Prometheus scrape targets
+  ansible.builtin.include_tasks: prometheus_targets.yml
+  when: prometheus_host in hostvars

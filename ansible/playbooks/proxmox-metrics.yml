@@ -1,0 +1,105 @@
+---
+# Proxmox metric server → InfluxDB 2 on monitor (cluster/monitor/influxdb)
+#
+# Manages Datacenter → Metric Server on the PVE host: pvestatd pushes host, VM
+# and storage metrics over the InfluxDB v2 HTTP API. The token is
+# INFLUXDB_PROXMOX_TOKEN from cluster/monitor/influxdb/.env.enc: write access
+# to the proxmox bucket only, because it travels over plain HTTP and PVE keeps it in
+# /etc/pve/priv/metricserver/<id>.pw. Grafana reads the bucket with Flux
+# (dashboards/proxmox-flux.json) using its own read-only token.
+#
+# Usage:
+#   ansible-playbook playbooks/proxmox-metrics.yml -l pve-nuc --check
+#   ansible-playbook playbooks/proxmox-metrics.yml -l pve-nuc
+
+- name: Proxmox metric server (InfluxDB)
+  hosts: proxmox
+  become: no
+  gather_facts: no
+  vars:
+    repo_root: "{{ playbook_dir }}/../.."
+    pm_id: monitor-server
+    pm_token_file: "/etc/pve/priv/metricserver/{{ pm_id }}.pw"
+    # Fields PVE reports back (token is stored separately)
+    pm_desired:
+      server: "{{ hostvars['monitor'].ansible_host }}"
+      port: 8086
+      influxdbproto: http
+      organization: homelab
+      bucket: proxmox
+
+  tasks:
+    - name: Skip offline hosts
+      ansible.builtin.meta: end_host
+      when: expected_offline | default(false) | bool
+
+    - name: Decrypt InfluxDB token
+      ansible.builtin.command: >-
+        sops --decrypt --input-type dotenv --output-type json
+        "{{ repo_root }}/cluster/monitor/influxdb/.env.enc"
+      register: _influx_raw
+      delegate_to: localhost
+      run_once: true
+      changed_when: false
+      check_mode: false
+      no_log: true
+
+    - name: Load token
+      ansible.builtin.set_fact:
+        pm_token: "{{ (_influx_raw.stdout | from_json).INFLUXDB_PROXMOX_TOKEN | default('') }}"
+      no_log: true
+
+    # Never fall back to the admin token
+    - name: Require the scoped Proxmox token
+      ansible.builtin.assert:
+        that: pm_token | length > 0
+        fail_msg: >-
+          INFLUXDB_PROXMOX_TOKEN missing from cluster/monitor/influxdb/.env.enc
+          (write-only token for the proxmox bucket; see .env.example)
+        quiet: true
+
+    - name: Read metric server config
+      ansible.builtin.command: pvesh get /cluster/metrics/server/{{ pm_id }} --output-format json
+      register: _pm_get
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Read stored token
+      ansible.builtin.slurp:
+        src: "{{ pm_token_file }}"
+      register: _pm_pw
+      failed_when: false
+      no_log: true
+
+    - name: Compare with desired state
+      ansible.builtin.set_fact:
+        pm_exists: "{{ _pm_get.rc == 0 }}"
+        pm_changed_fields: >-
+          {%- set current = (_pm_get.stdout | from_json) if _pm_get.rc == 0 else {} -%}
+          {%- set out = [] -%}
+          {%- for k, v in pm_desired.items() -%}
+          {%-   if (current.get(k, '') | string) != (v | string) -%}{%- set _ = out.append(k) -%}{%- endif -%}
+          {%- endfor -%}
+          {{ out | join(',') }}
+        pm_token_changed: "{{ ((_pm_pw.content | default('')) | b64decode | trim) != pm_token }}"
+      no_log: true
+
+    - name: Show drift (no secrets)
+      ansible.builtin.debug:
+        msg: >-
+          metric server {{ pm_id }}:
+          {{ 'missing' if not pm_exists | bool else
+             ('changed fields: ' ~ (pm_changed_fields or 'none') ~ '; token ' ~ ('differs' if pm_token_changed | bool else 'matches')) }}
+
+    - name: Create or update metric server
+      ansible.builtin.command:
+        argv: >-
+          {{ ['pvesh', 'set' if pm_exists | bool else 'create', '/cluster/metrics/server/' ~ pm_id]
+             + ([] if pm_exists | bool else ['--type', 'influxdb'])
+             + ['--server', pm_desired.server, '--port', pm_desired.port | string,
+                '--influxdbproto', pm_desired.influxdbproto,
+                '--organization', pm_desired.organization, '--bucket', pm_desired.bucket,
+                '--token', pm_token] }}
+      when: not pm_exists | bool or pm_changed_fields | length > 0 or pm_token_changed | bool
+      no_log: true  # argv carries the token

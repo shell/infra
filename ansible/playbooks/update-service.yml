@@ -1,0 +1,41 @@
+---
+# Pull latest images and recreate Docker Compose services
+#
+# Usage:
+#   Update all on host:    ansible-playbook playbooks/update-service.yml -l servarr
+#   Update one service:    ansible-playbook playbooks/update-service.yml -l servarr -e service=immich
+
+- name: Update Docker Compose services
+  hosts: docker_hosts:vps_hosts
+  become: no
+  vars:
+    base_path: "/home/{{ ansible_user }}"
+
+  tasks:
+    - name: Set services to update
+      ansible.builtin.set_fact:
+        services_to_update: "{{ [service] if service is defined else docker_compose_dirs }}"
+
+    - name: Pull latest images
+      ansible.builtin.shell: |
+        cd "{{ base_path }}/{{ item }}"
+        docker compose pull 2>&1
+      loop: "{{ services_to_update }}"
+      register: pull_result
+      changed_when: "'Pull complete' in pull_result.stdout or 'Downloaded newer image' in pull_result.stdout"
+
+    - name: Recreate services with new images
+      ansible.builtin.shell: |
+        cd "{{ base_path }}/{{ item }}"
+        docker compose up -d --remove-orphans 2>&1
+      loop: "{{ services_to_update }}"
+      register: up_result
+      changed_when: "'Recreated' in up_result.stdout or 'Started' in up_result.stdout"
+
+    - name: Show results
+      ansible.builtin.debug:
+        msg: |
+          {{ item.0.item }}: {{ 'pulled new images' if item.0.changed else 'already up to date' }} / {{ 'recreated' if item.1.changed else 'no change' }}
+      loop: "{{ pull_result.results | zip(up_result.results) | list }}"
+      loop_control:
+        label: "{{ item.0.item }}"

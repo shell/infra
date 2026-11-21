@@ -1,0 +1,138 @@
+# Classifies paperless-ngx documents (title, tags, correspondent, type, date)
+# with Claude. Needs the paperless-ai Secret (ANTHROPIC_API_KEY,
+# PAPERLESS_API_TOKEN) from the cluster overlay.
+#
+# Env vars below override the web UI settings (shown as locked there);
+# everything else is configured in the UI and stored in /app/data/config.json.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paperless-ai
+  namespace: apps-internal
+  labels:
+    app: paperless-ai
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate # RWO volume
+  selector:
+    matchLabels:
+      app: paperless-ai
+  template:
+    metadata:
+      labels:
+        app: paperless-ai
+    spec:
+      # The Service "paperless-ai" would inject PAPERLESS_AI_PORT=tcp://<ip>:3000,
+      # which collides with the app's own port setting (crashes with port NaN).
+      enableServiceLinks: false
+      # Talks to paperless-ngx and Anthropic only; never to the Kubernetes API
+      automountServiceAccountToken: false
+      securityContext:
+        # Image runs as root by default; node:22 base ships uid 1000 "node"
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: paperless-ai
+          # Pinned by tag + digest: bump both deliberately, because config/data
+          # migrations run on start
+          image: clusterzx/paperless-ai:4.3.1@sha256:87a49846b49afe17eb66690a989ad25f67a7d107191586aa9dbfed370129fc20
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: AI_PROVIDER
+              value: anthropic
+            # Haiku is plenty for tagging/titles and cheapest per document
+            - name: ANTHROPIC_MODEL
+              value: claude-haiku-5-5
+            - name: PAPERLESS_API_URL
+              value: http://paperless-ngx:8000/api
+            # Links in the UI open the real paperless site
+            - name: PAPERLESS_PUBLIC_URL
+              value: https://paperless.sf.penk.in
+            - name: PAPERLESS_AI_URL
+              value: https://paperless-ai.sf.penk.in
+            - name: TRUST_PROXY
+              value: "true"
+            # Paperless had no tags/correspondents/types yet, so let the AI
+            # create them. Flip to "true" once the taxonomy has settled.
+            - name: RESTRICT_TO_EXISTING_TAGS
+              value: "false"
+            - name: RESTRICT_TO_EXISTING_CORRESPONDENTS
+              value: "false"
+            - name: RESTRICT_TO_EXISTING_DOCUMENT_TYPES
+              value: "false"
+            - name: ADD_AI_PROCESSED_TAG
+              value: "true"
+            - name: AI_PROCESSED_TAG_NAME
+              value: ai-processed
+            # paperless-ngx already OCRs; don't burn CPU (and heat) redoing it
+            - name: OCR_ENABLED
+              value: "false"
+            - name: PROCESSING_CONCURRENCY
+              value: "1"
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: paperless-ai
+                  key: ANTHROPIC_API_KEY
+            - name: PAPERLESS_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: paperless-ai
+                  key: PAPERLESS_API_TOKEN
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              # Only the local embedding model (RAG indexing) is CPU-heavy
+              cpu: "1"
+              memory: 1536Mi
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 5
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+            # Writable scratch, since the root filesystem is read-only: temp files
+            # and ~/.cache (HOME of uid 1000 "node")
+            - name: tmp
+              mountPath: /tmp
+            - name: home
+              mountPath: /home/node
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: paperless-ai-data
+        - name: tmp
+          emptyDir:
+            sizeLimit: 512Mi
+        - name: home
+          emptyDir:
+            sizeLimit: 512Mi

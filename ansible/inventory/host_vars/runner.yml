@@ -1,0 +1,9 @@
+---
+# runner specific variables
+
+firewall_rules:
+  - { route: true, from: ["{{ firewall_lan }}", "{{ firewall_clients }}"], port: 22, comment: "Forgejo SSH (host 2222)" }
+  - { route: true, from: "{{ firewall_traefik }}", port: 3000, comment: "Forgejo web via Traefik" }
+  # forgejo-runner cache server listens on a random host port (cache.port unset),
+  # so job containers need the whole host
+  - { from: "{{ firewall_docker_nets }}", comment: "Job containers to runner cache server" }

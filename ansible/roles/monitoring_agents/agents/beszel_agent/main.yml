@@ -1,0 +1,115 @@
+---
+# Beszel agent as a native systemd service via community.beszel.agent.
+# Connects to the hub over WebSocket using the universal token (auto-registers
+# new systems); the agent's SSH listener is disabled.
+
+# Keep the agent's identity from the old Docker agent so the hub sees the same
+# system instead of registering a new one.
+- name: beszel_agent | Check fingerprints
+  ansible.builtin.stat:
+    path: "{{ item }}/fingerprint"
+  loop:
+    - /var/lib/beszel-agent
+    - "{{ beszel_agent_legacy_data_dir }}"
+  register: _beszel_fp
+
+- name: beszel_agent | Migrate fingerprint from Docker agent
+  when:
+    - not _beszel_fp.results[0].stat.exists
+    - _beszel_fp.results[1].stat.exists
+  block:
+    - name: beszel_agent | Create state directory
+      ansible.builtin.file:
+        path: /var/lib/beszel-agent
+        state: directory
+        mode: "0755"
+
+    # systemd's StateDirectory= chowns it to the agent user on start
+    - name: beszel_agent | Copy fingerprint
+      ansible.builtin.copy:
+        src: "{{ beszel_agent_legacy_data_dir }}/fingerprint"
+        dest: /var/lib/beszel-agent/fingerprint
+        remote_src: true
+        mode: "0644"
+      when: not ansible_check_mode
+
+- name: beszel_agent | Stop Docker-based agent
+  ansible.builtin.include_tasks: "{{ role_path }}/tasks/remove_docker_agent.yml"
+  vars:
+    legacy_container: beszel-agent
+    legacy_dir: "/home/{{ ansible_user }}/beszel"
+
+# Agents installed with the upstream install script (/opt/beszel-agent) come
+# with a self-update timer and a manual drop-in; versions are pinned here now.
+# The unit file itself is replaced by the role below (same path and state dir).
+- name: beszel_agent | Check for script-installed agent
+  ansible.builtin.stat:
+    path: /opt/beszel-agent
+  register: _beszel_script_install
+
+- name: beszel_agent | Remove script-installed agent leftovers
+  when: _beszel_script_install.stat.exists
+  block:
+    - name: beszel_agent | Disable self-update timer
+      ansible.builtin.systemd_service:
+        name: beszel-agent-update.timer
+        state: stopped
+        enabled: false
+      failed_when: false
+
+    - name: beszel_agent | Remove self-update units, drop-ins and binary
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/systemd/system/beszel-agent-update.timer
+        - /etc/systemd/system/beszel-agent-update.service
+        - /etc/systemd/system/beszel-agent.service.d
+        - /opt/beszel-agent
+
+# intel_gpu_top reads the i915 PMU. Ubuntu ships perf_event_paranoid=4, where
+# that needs CAP_SYS_ADMIN; at the upstream default (2) CAP_PERFMON — which the
+# role grants for intel GPUs — is enough.
+- name: beszel_agent | Allow Intel GPU PMU access with CAP_PERFMON
+  ansible.posix.sysctl:
+    name: kernel.perf_event_paranoid
+    value: "{{ beszel_agent_perf_event_paranoid | string }}"
+    sysctl_file: /etc/sysctl.d/60-beszel-intel-gpu.conf
+    state: present
+  register: _beszel_perf_sysctl
+  when: beszel_agent_gpus | selectattr('type', 'equalto', 'intel') | list | length > 0
+
+# The agent gives up on GPU collection after a few failed attempts, so it has
+# to be restarted to pick up the new PMU access.
+- name: beszel_agent | Restart agent to pick up PMU access
+  ansible.builtin.systemd_service:
+    name: beszel-agent
+    state: restarted
+  when:
+    - _beszel_perf_sysctl is changed
+    - not ansible_check_mode
+  failed_when: false  # first install: service doesn't exist yet, role starts it
+
+- name: beszel_agent | Install
+  ansible.builtin.include_role:
+    name: community.beszel.agent
+  vars:
+    agent_version: "{{ beszel_agent_version }}"
+    agent_hub_url: "{{ beszel_hub_url }}"
+    agent_public_key: "{{ monitoring_secrets.beszel_agent_key }}"
+    # A per-host token adopts an existing hub system (e.g. one added over SSH)
+    # instead of auto-registering a duplicate.
+    agent_token: >-
+      {{ (monitoring_secrets.beszel_agent_host_tokens | default({}))[inventory_hostname]
+         | default(monitoring_secrets.beszel_agent_token) }}
+    agent_disable_ssh: true
+    agent_name: "{{ inventory_hostname }}"
+    # docker group = container stats; same trust level as the old agent's
+    # docker.sock mount
+    agent_user_groups: >-
+      {{ (['docker'] if (beszel_agent_docker_stats and monitoring_has_docker) else [])
+         + beszel_agent_extra_groups }}
+    agent_extra_filesystems: "{{ beszel_agent_extra_filesystems }}"
+    agent_gpus: "{{ beszel_agent_gpus }}"
+    agent_smart_disks: "{{ beszel_agent_smart_disks }}"
+    agent_additional_devices: "{{ beszel_agent_additional_devices }}"
