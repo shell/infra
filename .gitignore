@@ -222,6 +222,7 @@ tfplan
 # Agents
 /docs
 .claude/*.local.json
+PUBLISH_AUDIT.md
 
 # Local-only folders: ignore the whole folder, not just today's file types
 config-backups/

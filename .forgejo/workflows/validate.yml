@@ -77,37 +77,25 @@ jobs:
         working-directory: ansible
         run: ansible-playbook --syntax-check playbooks/*.yml
 
+  # Container job (never host mode): PRs must not get a shell on the runner host.
+  # Full-history scan; fails the run on any finding. Bump version + sha256 together.
   security-scan:
-    name: Security Scan
+    name: Secret scan (gitleaks)
     runs-on: docker
+    env:
+      GITLEAKS_VERSION: 8.30.1
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  # linux_x64
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Check for secrets in code
+      - name: Install gitleaks
         run: |
-          echo "Scanning for potential secrets..."
-          PATTERNS=(
-            'password\s*[:=]\s*["\x27][^"\x27]+["\x27]'
-            'api[_-]?key\s*[:=]\s*["\x27][^"\x27]+["\x27]'
-            'secret\s*[:=]\s*["\x27][^"\x27]+["\x27]'
-            'token\s*[:=]\s*["\x27][^"\x27]+["\x27]'
-          )
+          curl -sSfL -o /tmp/gitleaks.tgz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  /tmp/gitleaks.tgz" | sha256sum -c -
+          tar -xzf /tmp/gitleaks.tgz -C /usr/local/bin gitleaks
 
-          FOUND=0
-          for pattern in "${PATTERNS[@]}"; do
-            # Exclude .env.example, .env.enc, and documentation
-            if grep -riE "$pattern" cluster/ ansible/ \
-                --include="*.yml" --include="*.yaml" \
-                --exclude="*.example" --exclude="*.enc" \
-                --exclude="*.md" 2>/dev/null | \
-                grep -v '\${' | grep -v 'your_' | grep -v 'change_this'; then
-              FOUND=1
-            fi
-          done
-
-          if [ $FOUND -eq 1 ]; then
-            echo "WARNING: Potential secrets found in code. Please review."
-            # Don't fail, just warn - some false positives expected
-          else
-            echo "No obvious secrets found in tracked files."
-          fi
+      - name: Scan full history
+        run: gitleaks git --redact --no-banner --exit-code 1 .
