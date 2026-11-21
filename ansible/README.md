@@ -6,13 +6,7 @@ This directory contains Ansible playbooks for deploying and managing the homelab
 
 ```bash
 # Install Ansible
-brew install ansible
-
-# Install SOPS and age (for secrets)
-brew install sops age
-
-# GNU tar (prometheus.prometheus roles unpack archives on the controller)
-brew install gnu-tar
+brew install ansible sops age gnu-tar
 
 # Galaxy collections (pinned)
 ansible-galaxy collection install -r requirements.yml
