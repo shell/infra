@@ -1,4 +1,4 @@
-# Homelab buckets in the B2 account, imported 2026-11-21 (imports.tf).
+# Homelab buckets in the B2 account
 # Not managed here: personal buckets (managed in the B2 web UI) and B2's own
 # "snapshot" bucket that the web UI creates for snapshot downloads.
 #
