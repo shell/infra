@@ -120,12 +120,16 @@
       retries: 10
       delay: 3
 
+    # --keep-labels: without it, re-registering wipes the runner's labels in
+    # Forgejo, and the runner only re-declares them (from config.yml) on start.
+    # A re-run that doesn't restart the runner then leaves every job waiting.
     - name: Register runner (idempotent, offline)
       ansible.builtin.command:
         cmd: >-
           docker exec -i -u git forgejo
           forgejo forgejo-cli actions register
           --name {{ forgejo_runner_name }}
+          --keep-labels
           --secret-stdin -
         stdin: "{{ runner_secret.stdout }}"
         # Secret must be exactly 40 chars; no trailing newline
