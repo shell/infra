@@ -1,65 +1,68 @@
-// Example/default ACLs for unrestricted connections.
+// Tailnet policy. Rendered by policy.tf: the users.<name> placeholders come
+// from the 1Password item "tailscale-users". Edit here, not in the admin console.
+//
+// Model: people get everything, machines get nothing. Infrastructure devices
+// are tagged by function and appear in no grant as a source, so they only
+// accept and forward traffic and never open connections into the tailnet.
 {
+	// Homelab LAN (192.168.10.0/24), reached through the tag:router subnet routers
 	"hosts": {
-		"zima-msk":      "100.82.250.25",
-		"ts-router":     "100.94.77.121",
-		"ts-router-nuc": "192.168.10.141",
-		"pi-hole":       "192.168.10.198", // subnet via ts-router
+		"lan":     "192.168.10.0/24",
+		"k8s-api": "192.168.10.20",
+		"pve-nuc": "192.168.10.120",
+		"ts-router": "192.168.10.141",
+		"servarr": "192.168.10.142",
+		"tools":   "192.168.10.143",
+		"pi-hole": "192.168.10.198",
+		"monitor": "192.168.10.230",
+		"k8s-lb":  "192.168.10.240/28", // MetalLB pool .240-.249
+		"runner":  "192.168.10.252",
 	},
 
-	// Declare static groups of users. Use autogroups for all users or users with a specific role.
-	// "groups": {
-	//   "group:example": ["alice@example.com", "bob@example.com"],
-	// },
-
-	// Define the tags which can be applied to devices and by which users.
-	// "tagOwners": {
-	//   "tag:example": ["autogroup:admin"],
-	// },
+	// Tags by function; a device can carry several (terraform/tailscale/devices.tf)
+	//   tag:router    ts-router (VM), ts-router-nuc (LXC): LAN subnet route
+	//   tag:exit-node routers, zima-msk, zima-rov, srv1517572: exit node
+	//   tag:relay     srv1517572 (Hostinger VPS): peer relay
+	//   tag:terraform the Terraform OAuth client; it can apply the tags it owns
 	"tagOwners": {
-		"tag:relay": ["autogroup:admin"],
+		"tag:terraform": ["autogroup:admin"],
+		"tag:router":    ["autogroup:admin", "tag:terraform"],
+		"tag:exit-node": ["autogroup:admin", "tag:terraform"],
+		"tag:relay":     ["autogroup:admin", "tag:terraform"],
 	},
 
-	// Define access control lists for users, groups, autogroups, tags,
-	// Tailscale IP addresses, and subnet ranges.
-	"acls": [
-		// Allow all connections.
-		// Comment this section out if you want to define specific restrictions.
-		// {"action": "accept", "src": ["*"], "dst": ["*:*"]},
+	// Routes approve themselves when a tagged device (re)advertises them.
+	// routes.tf records the same approvals explicitly.
+	"autoApprovers": {
+		"routes":   {"192.168.10.0/24": ["tag:router"]},
+		"exitNode": ["tag:exit-node"],
+	},
 
-		// Allow users in "group:example" to access "tag:example", but only from
-		// devices that are running macOS and have enabled Tailscale client auto-updating.
-		// {"action": "accept", "src": ["group:example"], "dst": ["tag:example:*"], "srcPosture":["posture:autoUpdateMac"]},
+	"grants": [
+		// People: every device and the LAN
+		{
+			"src": ["autogroup:member"],
+			"dst": ["*"],
+			"ip":  ["*"],
+		},
+		// People: the internet through any exit node ("*" doesn't include it)
+		{
+			"src": ["autogroup:member"],
+			"dst": ["autogroup:internet"],
+			"ip":  ["*"],
+		},
+		// Relay through the VPS when direct paths are slow or blocked. Tagged
+		// devices behind other people's NATs (zimas) need it too; this is an
+		// app capability only and grants them no IP access.
+		{
+			"src": ["autogroup:member", "tag:exit-node", "tag:router"],
+			"dst": ["tag:relay"],
+			"app": {"tailscale.com/cap/relay": []},
+		},
 	],
 
-	// Define postures that will be applied to all rules without any specific
-	// srcPosture definition.
-	// "defaultSrcPosture": [
-	//      "posture:anyMac",
-	// ],
-
-	// Define device posture rules requiring devices to meet
-	// certain criteria to access parts of your system.
-	// "postures": {
-	//      // Require devices running macOS, a stable Tailscale
-	//      // version and auto update enabled for Tailscale.
-	//  "posture:autoUpdateMac": [
-	//      "node:os == 'macos'",
-	//      "node:tsReleaseTrack == 'stable'",
-	//      "node:tsAutoUpdate",
-	//  ],
-	//      // Require devices running macOS and a stable
-	//      // Tailscale version.
-	//  "posture:anyMac": [
-	//      "node:os == 'macos'",
-	//      "node:tsReleaseTrack == 'stable'",
-	//  ],
-	// },
-
-	// Define users and devices that can use Tailscale SSH.
+	// Tailscale SSH to your own untagged devices only; infra uses LAN SSH with the SSH CA
 	"ssh": [
-		// Allow all users to SSH into their own devices in check mode.
-		// Comment this section out if you want to define specific restrictions.
 		{
 			"action": "check",
 			"src":    ["autogroup:member"],
@@ -68,38 +71,34 @@
 		},
 	],
 
-	// Test access rules every time they're saved.
+	// Run on every save; a failing test rejects the policy
 	"tests": [
 		{
 			"src": "${users.admin}",
-
 			"accept": [
-				"ts-router:443",
-				"zima-msk:443",
-				"pi-hole:53",
+				"pve-nuc:8006", "servarr:443", "monitor:443", "pi-hole:53", "k8s-api:6443",
+				"tag:router:22", "tag:exit-node:22", "tag:relay:22",
 			],
 		},
 		{
 			"src": "${users.ann}",
-
 			"accept": [
-				"ts-router:443",
-				"zima-msk:443",
-				"pi-hole:53",
+				"pve-nuc:8006", "servarr:443", "monitor:443", "pi-hole:53", "k8s-api:6443",
+				"tag:router:22", "tag:exit-node:22", "tag:relay:22",
 			],
 		},
-	],
-
-	"grants": [
+		// Infrastructure initiates nothing
 		{
-			"src": ["autogroup:member", "${users.ann}"],
-			"dst": ["tag:relay"],
-			"app": {"tailscale.com/cap/relay": []},
+			"src":  "tag:router",
+			"deny": ["pve-nuc:8006", "pi-hole:53", "tag:router:22", "tag:exit-node:22", "tag:relay:22"],
 		},
 		{
-			"src": ["autogroup:admin", "${users.ann}"],
-			"dst": ["*"],
-			"ip":  ["*"],
+			"src":  "tag:exit-node",
+			"deny": ["pve-nuc:8006", "pi-hole:53", "tag:router:22", "tag:exit-node:22", "tag:relay:22"],
+		},
+		{
+			"src":  "tag:relay",
+			"deny": ["pve-nuc:8006", "pi-hole:53", "tag:router:22", "tag:exit-node:22", "tag:relay:22"],
 		},
 	],
 }

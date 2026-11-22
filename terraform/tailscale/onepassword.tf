@@ -4,7 +4,10 @@
 #
 # Item "tailscale-terraform", section "terraform": oauth_client_id, oauth_client_secret
 #   OAuth client: admin console -> Settings -> Trust credentials -> OAuth, scopes:
-#   Policy File: write, DNS: write, Devices Core: read, Devices Routes: write
+#   Policy File: write, DNS: write, Devices Core: write, Devices Routes: write,
+#   Feature Settings: write; client tag: tag:terraform. A client can only apply
+#   tags its own tags own, so tagOwners in policy.hujson.tftpl lists tag:terraform
+#   as an owner of every function tag.
 #
 # Item "tailscale-users", section "terraform": one field per tailnet user,
 #   <name> = login email, used as ${users.<name>} in policy.hujson.tftpl.

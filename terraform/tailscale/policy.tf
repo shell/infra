@@ -1,5 +1,5 @@
-# Tailnet policy file (ACLs, grants, SSH, tests). Edit policy.hujson.tftpl,
-# not the admin console: the next apply overwrites console edits.
+# Tailnet policy file (hosts, tags, grants, SSH, tests). Edit policy.hujson.tftpl:
+# the admin console's editor is locked (settings.tf).
 # Tailscale runs the "tests" section on every save and rejects a policy that fails them.
 resource "tailscale_acl" "policy" {
   acl = templatefile("${path.module}/policy.hujson.tftpl", { users = local.ts_users })
