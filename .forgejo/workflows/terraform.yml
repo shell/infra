@@ -23,21 +23,14 @@ jobs:
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      # Provider secrets are read from the 1Password "Homelab" vault
+      # (terraform/<dir>/onepassword.tf)
+      OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Verify SOPS key exists
-        run: |
-          if [ ! -f "$HOME/.config/sops/age/keys.txt" ]; then
-            echo "ERROR: SOPS age key not found"
-            exit 1
-          fi
-
-      - name: Decrypt secrets
-        run: sops -d secrets.auto.tfvars.enc > secrets.auto.tfvars
-
-      # terraform comes from the runner host (/usr/bin/terraform)
+      # terraform and op come from the runner host (playbooks/forgejo-runner.yml)
       - name: Terraform Init
         run: terraform init -input=false
 
@@ -53,6 +46,7 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
 
-      - name: Cleanup secrets
+      # The plan file can embed sensitive values
+      - name: Cleanup plan
         if: always()
-        run: rm -f secrets.auto.tfvars tfplan
+        run: rm -f tfplan

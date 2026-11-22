@@ -1,5 +1,5 @@
 resource "cloudflare_record" "terraform_managed_resource_04670919a4e64b2183f68f100a359073_0" {
-  content = var.vps_ip
+  content = local.vps_ip
   name    = "penk.in"
   proxied = true
   ttl     = 1
@@ -93,7 +93,7 @@ resource "cloudflare_record" "terraform_managed_resource_1b770ee617f29d1a79ee35a
 
 resource "cloudflare_record" "meet_penkin" {
   comment = "Jitsi Meet on Hostinger VPS"
-  content = var.vps_ip
+  content = local.vps_ip
   name    = "meet"
   proxied = false
   ttl     = 300
@@ -103,7 +103,7 @@ resource "cloudflare_record" "meet_penkin" {
 
 resource "cloudflare_record" "umami_penkin" {
   comment = "Umami analytics on Hostinger VPS"
-  content = var.vps_ip
+  content = local.vps_ip
   name    = "umami"
   proxied = true
   ttl     = 1
@@ -113,7 +113,7 @@ resource "cloudflare_record" "umami_penkin" {
 
 resource "cloudflare_record" "france_guide_penkin" {
   comment = "France guide on Hostinger VPS"
-  content = var.vps_ip
+  content = local.vps_ip
   name    = "france-guide"
   proxied = true
   ttl     = 1
@@ -123,7 +123,7 @@ resource "cloudflare_record" "france_guide_penkin" {
 
 resource "cloudflare_record" "penk_in_preview" {
   comment = "penk.in preview on Hostinger VPS"
-  content = var.vps_ip
+  content = local.vps_ip
   name    = "new"
   proxied = true
   ttl     = 1

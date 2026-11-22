@@ -1,12 +1,12 @@
 resource "cloudflare_zero_trust_tunnel_cloudflared" "k8s_dashboards" {
-  account_id = var.cloudflare_account_id
+  account_id = local.cloudflare_account_id
   name       = "dell-optiplex-k8s"
-  secret     = var.tunnel_secret
+  secret     = local.tunnel_secret
   config_src = "cloudflare"
 }
 
 resource "cloudflare_zero_trust_tunnel_cloudflared_config" "k8s_dashboards" {
-  account_id = var.cloudflare_account_id
+  account_id = local.cloudflare_account_id
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.k8s_dashboards.id
 
   config {

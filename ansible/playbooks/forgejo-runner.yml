@@ -28,8 +28,73 @@
     # containers too (127.0.0.1 would be the container) — LAN IP, no Traefik hop
     forgejo_url: "http://192.168.10.252:3000/"
     secret_env_file: "{{ playbook_dir }}/../../cluster/runner/forgejo/.env.enc"
+    # Tools the `self-hosted` jobs call directly (docs/forgejo.md).
+    # terraform + 1password-cli come from vendor apt repos and follow normal
+    # apt upgrades (update-systems.yml); sops has no apt package, so it's pinned.
+    sops_version: "3.11.0"
+    # sha256 of sops-v<version>.linux.amd64 (release checksums.txt)
+    sops_sha256: "775f1384d55decfad228e7196a3f683791914f92a473f78fc47700531c29dfef"
+    runner_apt_repos:
+      - name: hashicorp
+        key_url: https://apt.releases.hashicorp.com/gpg
+        repo: "https://apt.releases.hashicorp.com {{ ansible_facts['distribution_release'] }} main"
+      - name: 1password
+        key_url: https://downloads.1password.com/linux/keys/1password.asc
+        repo: "https://downloads.1password.com/linux/debian/amd64 stable main"
 
   tasks:
+    # --- CI tooling -------------------------------------------------------
+    # Keys are stored ASCII-armored as .asc (apt reads those directly), and the
+    # .list files are written whole so re-runs replace, never append, lines.
+    - name: Install apt repo signing keys
+      ansible.builtin.get_url:
+        url: "{{ item.key_url }}"
+        dest: "/etc/apt/keyrings/{{ item.name }}.asc"
+        mode: '0644'
+      loop: "{{ runner_apt_repos }}"
+      loop_control:
+        label: "{{ item.name }}"
+      become: yes
+
+    - name: Configure apt repos
+      ansible.builtin.copy:
+        content: "deb [arch=amd64 signed-by=/etc/apt/keyrings/{{ item.name }}.asc] {{ item.repo }}\n"
+        dest: "/etc/apt/sources.list.d/{{ item.name }}.list"
+        mode: '0644'
+      loop: "{{ runner_apt_repos }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: runner_apt_lists
+      become: yes
+
+    # Superseded by /etc/apt/keyrings/hashicorp.asc (from the hand install)
+    - name: Remove old HashiCorp keyring
+      ansible.builtin.file:
+        path: /usr/share/keyrings/hashicorp-archive-keyring.gpg
+        state: absent
+      become: yes
+
+    - name: Install terraform, 1Password CLI and age
+      ansible.builtin.apt:
+        name:
+          - terraform
+          - 1password-cli
+          - age
+        state: present
+        update_cache: "{{ runner_apt_lists is changed }}"
+      become: yes
+      # --check doesn't really add the repos, so new packages can't resolve yet
+      ignore_errors: "{{ ansible_check_mode }}"
+
+    - name: Install sops binary
+      ansible.builtin.get_url:
+        url: "https://github.com/getsops/sops/releases/download/v{{ sops_version }}/sops-v{{ sops_version }}.linux.amd64"
+        dest: /usr/local/bin/sops
+        checksum: "sha256:{{ sops_sha256 }}"
+        mode: '0755'
+      become: yes
+
+    # --- Runner -----------------------------------------------------------
     # Decrypted on the runner VM itself (it holds the age key), with the
     # still-encrypted file piped in from the controller. No delegate_to:
     # localhost, so this works both locally and with -e ansible_connection=ssh.
