@@ -3,7 +3,7 @@
 # Tagged devices are owned by their tags, not a user: they get no access of
 # their own, only what the policy grants to people reaching them.
 locals {
-  # Device name (first label of its MagicDNS name) => tags, sorted as the API returns them
+  # Device name (first label of its MagicDNS name) => tags
   device_tags = {
     "ts-router"     = ["tag:exit-node", "tag:router"]
     "ts-router-nuc" = ["tag:exit-node", "tag:router"]
