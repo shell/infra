@@ -7,11 +7,6 @@ creation_rules:
     age: >-
       age1drn9f3pzvgxfjs2y22f6fr47ctd32q7k0ul075xxyfnaqczxygts7wknfj
 
-  # Tailscale ACL policy (contains tailnet member emails)
-  - path_regex: tailscale/config\.acl$
-    age: >-
-      age1drn9f3pzvgxfjs2y22f6fr47ctd32q7k0ul075xxyfnaqczxygts7wknfj
-
   # Encrypt all .env files
   - path_regex: \.env(\.enc)?$
     age: >-

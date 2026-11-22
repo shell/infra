@@ -26,9 +26,6 @@ acme.json
 # SSH CA private key (unencrypted - use ca_key.enc instead)
 ansible/ssh-ca/ca_key
 
-# Tailscale ACL (unencrypted - use config.acl.enc instead)
-tailscale/config.acl
-
 # =============================================================================
 # APPLICATION DATA & DATABASES
 # =============================================================================
