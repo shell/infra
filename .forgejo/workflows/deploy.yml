@@ -95,8 +95,11 @@ jobs:
       - name: Provision monitoring agents
         if: inputs.action == 'monitoring'
         working-directory: ansible
+        # prometheus.prometheus roles send $GITHUB_TOKEN (here: the Forgejo job
+        # token) as a header to github.com, and it ends up in target journald.
+        # Release downloads don't need it.
         run: |
-          ansible-playbook playbooks/monitoring.yml -l ${{ steps.hosts.outputs.hosts }}
+          env -u GITHUB_TOKEN ansible-playbook playbooks/monitoring.yml -l ${{ steps.hosts.outputs.hosts }}
 
       - name: Configure Proxmox backups
         if: inputs.action == 'proxmox-backup'
