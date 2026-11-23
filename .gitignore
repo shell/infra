@@ -207,14 +207,12 @@ venv/
 
 # Terraform
 .terraform/
-.terraform.lock.hcl
 secrets.auto.tfvars
 terraform.tfstate*
 *.tfvars
 *.tfvars.json
 *.tfplan
 tfplan
-
 
 # Agents
 /docs

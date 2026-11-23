@@ -5,8 +5,12 @@ on:
     branches: [main]
     paths:
       - 'terraform/**'
+      - '.forgejo/workflows/terraform.yml'
   workflow_dispatch:
 
+# Jobs run one at a time (runner capacity 1, forgejo-runner.config.yml.j2).
+# That is what keeps two applies off the same state: the B2 backend has no
+# state locking.
 jobs:
   terraform:
     name: Terraform (${{ matrix.directory }})
@@ -28,21 +32,72 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # terraform and op come from the runner host (playbooks/forgejo-runner.yml)
-      - name: Terraform Init
-        run: terraform init -input=false
+      # On push, only run the directories the push touched. Also run everything
+      # when a file directly under terraform/ or this workflow changed. Manual
+      # runs, new branches and pushes that can't be diffed run everything
+      # (fail open: never skip a real change).
+      - name: Check for changes in this directory
+        id: changes
+        working-directory: .
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          DIR: terraform/${{ matrix.directory }}
+        run: |
+          run=true
+          if [ "$EVENT" = "push" ] && [ -n "$BEFORE" ] \
+             && [ "$BEFORE" != "0000000000000000000000000000000000000000" ] \
+             && git fetch -q --depth=1 origin "$BEFORE" 2>/dev/null \
+             && changed=$(git diff --name-only "$BEFORE" HEAD); then
+            echo "Changed in this push:"; printf '%s\n' "$changed" | sed 's/^/  /'
+            if ! printf '%s\n' "$changed" \
+                | grep -qE "^$DIR/|^terraform/[^/]+$|^\.forgejo/workflows/terraform\.yml$"; then
+              run=false
+            fi
+          else
+            echo "Not a diffable push: running everything"
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+          echo "→ $DIR: run=$run"
+
+      # terraform and op come from the runner host (playbooks/forgejo-runner.yml).
+      # Providers are reused across runs instead of downloaded on every init;
+      # safe because jobs never run in parallel (capacity 1).
+      - name: Use shared provider cache
+        if: steps.changes.outputs.run == 'true'
+        run: |
+          mkdir -p "$HOME/.terraform.d/plugin-cache"
+          echo "TF_PLUGIN_CACHE_DIR=$HOME/.terraform.d/plugin-cache" >> "$GITHUB_ENV"
 
       - name: Terraform Format Check
+        if: steps.changes.outputs.run == 'true'
         run: terraform fmt -check
 
+      # readonly: providers come exactly from the committed .terraform.lock.hcl;
+      # a lock that needs updating fails here instead of drifting silently
+      - name: Terraform Init
+        if: steps.changes.outputs.run == 'true'
+        run: terraform init -input=false -lockfile=readonly
+
       - name: Terraform Validate
+        if: steps.changes.outputs.run == 'true'
         run: terraform validate -no-color
 
-      - name: Terraform Plan
-        run: terraform plan -no-color -input=false -out=tfplan
-
-      - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan
+      # -detailed-exitcode: 0 = no changes, 2 = changes, 1 = error. Skipping the
+      # apply of an empty plan saves ~6s per directory (it re-reads 1Password
+      # and starts every provider again).
+      - name: Terraform Plan & Apply
+        if: steps.changes.outputs.run == 'true'
+        run: |
+          set +e
+          terraform plan -no-color -input=false -detailed-exitcode -out=tfplan
+          rc=$?
+          set -e
+          case $rc in
+            0) echo "No changes: skipping apply" ;;
+            2) terraform apply -no-color -auto-approve tfplan ;;
+            *) exit $rc ;;
+          esac
 
       # The plan file can embed sensitive values
       - name: Cleanup plan

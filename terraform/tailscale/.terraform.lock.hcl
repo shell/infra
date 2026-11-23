@@ -1,0 +1,41 @@
+# This file is maintained automatically by "terraform init".
+# Manual edits may be lost in future updates.
+
+provider "registry.terraform.io/1password/onepassword" {
+  version     = "3.4.1"
+  constraints = "~> 3.4"
+  hashes = [
+    "h1:nhUczwyMg0jt5BsEocToG5oztI6RuNqUB9IQ7kLauhs=",
+    "h1:sfvN1OOuXaxSkYMT6ZMbrwSGUvaiB7Y24E2gVwIQlvU=",
+    "zh:0259dece04523bcdbd558c20c0eda0f614535fae3d583fb191549d8139137b85",
+    "zh:2f387a14e2cbd5c1ef4f9540b1a1aa4f84a61eb2c633b1a6bab16609afbeb8b2",
+    "zh:890df766e9b839623b1f0437355032a3c006226a6c200cd911e15ee1a9014e9f",
+    "zh:9c0f5db50328ab322b8a4ab85ce89c8f386ff60671d337705f3e307b31001b7b",
+    "zh:9ccbbb83dba7c8b1ce2b08c91aa58af77419f9dd04b4ca76cca7fe47d3791b3d",
+    "zh:d650a08d8521d5a51f0c4929decafbdd965c9bd191c7f48004427ba310613ade",
+    "zh:df82258369d1dd0801dbead6e85491edf166729fbb3b97aa3e9b08eb346cd90f",
+    "zh:f5db95e5f612b2156002067a5929a791b33f2d8efd64a44d110d533b850e74ee",
+  ]
+}
+
+provider "registry.terraform.io/tailscale/tailscale" {
+  version     = "0.30.0"
+  constraints = "~> 0.30"
+  hashes = [
+    "h1:Z1ZksETzZ1F5Ug3z3Jn4asutdlifd2gk89UTQBy/wqA=",
+    "h1:dlHZ0UtWxr6tzRj/NAOeCzJVn374cgPdVwInKY1zfes=",
+    "zh:246b17c98b9f9e7c4d54d2dbd4a8f12f9631526a51e782746ed3367656fcabfa",
+    "zh:5037942a200179b4fbd45ac7ca5d106bf3957faaf9fd9159ff434f67a7321200",
+    "zh:5be9fd3c50cf8c661bb152f49cb3cc64a9a78e767634a1118e4ced22b5c3ab17",
+    "zh:5d543c351086a120962bb7968e228147b15171ba678e551365592bbd7d777b48",
+    "zh:678c2917203f140ac76d79245d46835317122c5ad5abf78aac463496ac0799f7",
+    "zh:b62399f78ee2e83fb35a86be9c26d605f9d1e8afd82c605606646517a382079f",
+    "zh:d78a62ca97256368e7507cb049b36cc03c0b0c9258c05375a0f45e5d60cf18df",
+    "zh:d7b6497afdc8da8b39e4e2a707bb20338b504155b2363e55a1d853880069554a",
+    "zh:eda23a38a601fe9f4fa25298b7cc787567b52ced52f80703250cd3e95504ab19",
+    "zh:f0126d8f58cfa9f3c4b219a78f24df66debd90d51219481f3be258b04ec36757",
+    "zh:f2b3b344a021d5ccfc351a1fc3db204a2ecc2d1e916aad08964213c64e93aa39",
+    "zh:f64ee4fe6c9482101f6b1e5f4e79e29c8fa1cb654f9199d8b865c1bf51de0c21",
+    "zh:fbea1c4fa4fb415d661cde93a17a5f02293380b00061a552c06f899a016681ba",
+  ]
+}
