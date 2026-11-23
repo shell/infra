@@ -1,7 +1,9 @@
 services:
   immich-server:
     container_name: immich_server
-    image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-v2}
+    # Pinned: Immich releases can carry DB migrations — read the release notes,
+    # bump server + machine-learning together, then run the Deploy workflow.
+    image: ghcr.io/immich-app/immich-server:v3.4.2
     volumes:
       - ${UPLOAD_LOCATION}:/data
       - /etc/localtime:/etc/localtime:ro
@@ -18,7 +20,7 @@ services:
 
   immich-machine-learning:
     container_name: immich_machine_learning
-    image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-v2}
+    image: ghcr.io/immich-app/immich-machine-learning:v3.4.2  # keep in sync with immich-server
     volumes:
       - model-cache:/cache
     env_file:
