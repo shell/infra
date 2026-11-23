@@ -3,18 +3,39 @@
 #
 # Usage:
 #   Update all on host:    ansible-playbook playbooks/update-service.yml -l servarr
-#   Update one service:    ansible-playbook playbooks/update-service.yml -l servarr -e service=immich
+#   Update one service:    ansible-playbook playbooks/update-service.yml -e service=immich
+#                          (a docker_compose_dirs entry; hosts without it are
+#                          skipped, so -l is optional)
 
 - name: Update Docker Compose services
   hosts: docker_hosts:vps_hosts
-  become: no
+  become: false
+  gather_facts: false
+  strategy: free
   vars:
     base_path: "/home/{{ ansible_user }}"
+    # -e service=<dir> narrows the run to one compose dir; empty = all of them
+    update_service: "{{ service | default('') | trim }}"
+    services_to_update: "{{ [update_service] if update_service else docker_compose_dirs }}"
 
   tasks:
-    - name: Set services to update
-      ansible.builtin.set_fact:
-        services_to_update: "{{ [service] if service is defined else docker_compose_dirs }}"
+    # Typos would otherwise skip every host and "succeed" doing nothing
+    - name: Check requested service exists on a targeted host
+      ansible.builtin.assert:
+        that: >-
+          update_service in (ansible_play_hosts_all
+            | map('extract', hostvars, 'docker_compose_dirs') | flatten)
+        fail_msg: >-
+          service '{{ update_service }}' isn't in docker_compose_dirs of any
+          targeted host ({{ ansible_play_hosts_all | join(', ') }})
+        quiet: true
+      when: update_service | length > 0
+
+    - name: Skip hosts that don't run the requested service
+      ansible.builtin.meta: end_host
+      when:
+        - update_service | length > 0
+        - update_service not in docker_compose_dirs
 
     - name: Pull latest images
       ansible.builtin.shell: |

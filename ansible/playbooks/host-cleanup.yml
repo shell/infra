@@ -8,9 +8,30 @@
 
 - name: Host cleanup and disk reclamation
   hosts: docker_hosts
-  become: yes
+  become: true
+  # No facts needed (old-kernel check uses uname -r); also lets the probe
+  # below run before anything else touches a powered-off host
+  gather_facts: false
 
   tasks:
+    # maybe_offline hosts (inventory) are cleaned when on, skipped when off,
+    # instead of failing the run as unreachable
+    - name: Check whether maybe-offline host is powered on
+      ansible.builtin.wait_for_connection:
+        timeout: 10
+      register: _power_probe
+      ignore_errors: true
+      when: expected_offline | default(false) | bool
+
+    - name: Mark powered-off host as skipped
+      ansible.builtin.set_fact:
+        cleanup_skipped: true
+      when: _power_probe is failed
+
+    - name: Skip powered-off host
+      ansible.builtin.meta: end_host
+      when: _power_probe is failed
+
     - name: Capture disk space before cleanup
       ansible.builtin.shell: df -h / | tail -1 | awk '{print $4}'
       register: disk_before
@@ -46,7 +67,9 @@
       changed_when: false
 
     - name: List installed kernels
-      ansible.builtin.shell: dpkg --list 'linux-image-*' | grep '^ii' | awk '{print $2}' | grep -v "{{ ansible_kernel }}" | head -n -{{ host_cleanup.keep_kernels - 1 }}
+      # uname -r, not ansible_kernel: facts come from a 24h cache (ansible.cfg),
+      # so after a reboot into a new kernel they would protect the OLD one
+      ansible.builtin.shell: dpkg --list 'linux-image-*' | grep '^ii' | awk '{print $2}' | grep -v "$(uname -r)" | head -n -{{ host_cleanup.keep_kernels - 1 }}
       register: old_kernels
       changed_when: false
       failed_when: false
@@ -67,7 +90,7 @@
         fi
       register: docker_log_config
       changed_when: false
-      become: no
+      become: false
 
     - name: Warn if Docker log rotation not configured
       ansible.builtin.debug:
@@ -95,11 +118,14 @@
           chat_id: "{{ telegram.chat_id }}"
           text: |
             Host Cleanup Complete
-            {% for host in ansible_play_hosts %}
+            {% for host in ansible_play_hosts if hostvars[host].disk_after is defined %}
             {{ host }}: {{ hostvars[host].disk_before.stdout }} -> {{ hostvars[host].disk_after.stdout }} free
+            {% endfor %}
+            {% for host in ansible_play_hosts_all if hostvars[host].cleanup_skipped | default(false) %}
+            {{ host }}: skipped (powered off)
             {% endfor %}
           parse_mode: HTML
         status_code: 200
       run_once: true
-      become: no
+      become: false
       when: notify_telegram | default(false) | bool

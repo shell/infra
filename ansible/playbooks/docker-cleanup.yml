@@ -8,10 +8,28 @@
 
 - name: Docker cleanup and disk reclamation
   hosts: docker_hosts
-  become: no
-  gather_facts: no
+  become: false
+  gather_facts: false
 
   tasks:
+    # maybe_offline hosts (inventory) are cleaned when on, skipped when off,
+    # instead of failing the run as unreachable
+    - name: Check whether maybe-offline host is powered on
+      ansible.builtin.wait_for_connection:
+        timeout: 10
+      register: _power_probe
+      ignore_errors: true
+      when: expected_offline | default(false) | bool
+
+    - name: Mark powered-off host as skipped
+      ansible.builtin.set_fact:
+        cleanup_skipped: true
+      when: _power_probe is failed
+
+    - name: Skip powered-off host
+      ansible.builtin.meta: end_host
+      when: _power_probe is failed
+
     - name: Capture docker disk usage before
       ansible.builtin.shell: docker system df
       register: docker_df_before
@@ -62,6 +80,9 @@
             Docker Cleanup Complete
             {% for host in ansible_play_hosts %}
             {{ host }}: done
+            {% endfor %}
+            {% for host in ansible_play_hosts_all if hostvars[host].cleanup_skipped | default(false) %}
+            {{ host }}: skipped (powered off)
             {% endfor %}
           parse_mode: HTML
         status_code: 200
