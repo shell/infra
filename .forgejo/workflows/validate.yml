@@ -70,14 +70,9 @@ jobs:
       - uses: actions/checkout@v4
 
       # Skips Galaxy entirely unless requirements.yml changed since the last install.
-      # galaxy.lock: Deploy runs this too, and two installs into the same
-      # ~/.ansible/collections at once can leave it half-written.
       - name: Install Ansible collections
         working-directory: ansible
         run: |
-          mkdir -p "$HOME/.ansible/collections"
-          exec 9>"$HOME/.ansible/galaxy.lock"
-          flock -w 600 9
           stamp="$HOME/.ansible/collections/.requirements.sha256"
           want=$(sha256sum requirements.yml | cut -d' ' -f1)
           if [ "$(cat "$stamp" 2>/dev/null)" = "$want" ]; then

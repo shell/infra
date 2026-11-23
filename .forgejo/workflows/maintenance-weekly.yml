@@ -16,8 +16,8 @@ jobs:
 
       - name: Docker cleanup
         working-directory: ansible
-        run: flock -w 3600 "$HOME/.ansible/ci.lock" ansible-playbook playbooks/docker-cleanup.yml -e notify_telegram=true
+        run: ansible-playbook playbooks/docker-cleanup.yml -e notify_telegram=true
 
       - name: Host cleanup
         working-directory: ansible
-        run: flock -w 3600 "$HOME/.ansible/ci.lock" ansible-playbook playbooks/host-cleanup.yml -e notify_telegram=true
+        run: ansible-playbook playbooks/host-cleanup.yml -e notify_telegram=true

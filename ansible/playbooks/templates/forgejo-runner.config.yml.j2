@@ -4,7 +4,12 @@ log:
   job_level: info
 
 runner:
-  capacity: 3
+  # Keep at 1: jobs running one at a time is the only thing that stops
+  #  - concurrent terraform plan/apply on the same dir (S3/B2 backend has no state locking)
+  #  - Deploy and Maintenance running ansible against the same hosts at once
+  #  - parallel ansible-galaxy installs into ~/.ansible/collections
+  # Raising it needs locks for all three (see git history: CI flock locks).
+  capacity: 1
   timeout: 3h
   shutdown_timeout: 5m
   labels:

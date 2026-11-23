@@ -16,4 +16,4 @@ jobs:
 
       - name: Proxmox health
         working-directory: ansible
-        run: flock -w 3600 "$HOME/.ansible/ci.lock" ansible-playbook playbooks/proxmox-health.yml -e notify_telegram=true
+        run: ansible-playbook playbooks/proxmox-health.yml -e notify_telegram=true

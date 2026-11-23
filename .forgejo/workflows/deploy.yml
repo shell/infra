@@ -63,14 +63,9 @@ jobs:
             cluster/ --no-warnings
 
       # Skips Galaxy entirely unless requirements.yml changed since the last install.
-      # galaxy.lock: Validate runs this too, and two installs into the same
-      # ~/.ansible/collections at once can leave it half-written.
       - name: Install Ansible collections
         working-directory: ansible
         run: |
-          mkdir -p "$HOME/.ansible/collections"
-          exec 9>"$HOME/.ansible/galaxy.lock"
-          flock -w 600 9
           stamp="$HOME/.ansible/collections/.requirements.sha256"
           want=$(sha256sum requirements.yml | cut -d' ' -f1)
           if [ "$(cat "$stamp" 2>/dev/null)" = "$want" ]; then
@@ -82,8 +77,6 @@ jobs:
 
       # `all` skips hosts in the maybe_offline group (inventory/hosts.yml);
       # pick the host explicitly to target one of them.
-      # Every ansible-playbook below takes ci.lock: runner capacity is > 1, and
-      # this keeps Deploy and Maintenance from touching the same hosts at once.
       - name: Set target hosts
         id: hosts
         run: |
@@ -97,7 +90,7 @@ jobs:
         if: inputs.action == 'status'
         working-directory: ansible
         run: |
-          flock -w 3600 "$HOME/.ansible/ci.lock" ansible-playbook playbooks/status.yml -l ${{ steps.hosts.outputs.hosts }}
+          ansible-playbook playbooks/status.yml -l ${{ steps.hosts.outputs.hosts }}
 
       # Deploying `runner` restarts Forgejo mid-job; the runner reconnects and
       # finishes, but the UI may show the job as failed — check the next status run.
@@ -110,9 +103,9 @@ jobs:
           SERVICE: ${{ inputs.service }}
         run: |
           if [ -n "$SERVICE" ]; then
-            flock -w 3600 "$HOME/.ansible/ci.lock" ansible-playbook playbooks/deploy.yml -l ${{ steps.hosts.outputs.hosts }} -e "service=$SERVICE"
+            ansible-playbook playbooks/deploy.yml -l ${{ steps.hosts.outputs.hosts }} -e "service=$SERVICE"
           else
-            flock -w 3600 "$HOME/.ansible/ci.lock" ansible-playbook playbooks/deploy.yml -l ${{ steps.hosts.outputs.hosts }}
+            ansible-playbook playbooks/deploy.yml -l ${{ steps.hosts.outputs.hosts }}
           fi
 
       - name: Provision monitoring agents
@@ -122,13 +115,13 @@ jobs:
         # token) as a header to github.com, and it ends up in target journald.
         # Release downloads don't need it.
         run: |
-          env -u GITHUB_TOKEN flock -w 3600 "$HOME/.ansible/ci.lock" ansible-playbook playbooks/monitoring.yml -l ${{ steps.hosts.outputs.hosts }}
+          env -u GITHUB_TOKEN ansible-playbook playbooks/monitoring.yml -l ${{ steps.hosts.outputs.hosts }}
 
       - name: Configure Proxmox backups
         if: inputs.action == 'proxmox-backup'
         working-directory: ansible
         run: |
-          flock -w 3600 "$HOME/.ansible/ci.lock" ansible-playbook playbooks/proxmox-backup.yml -l proxmox
+          ansible-playbook playbooks/proxmox-backup.yml -l proxmox
 
       # UFW for host + Docker-published ports. Never run against `runner` from
       # here: a mistake there cuts off the very runner executing the job.
@@ -136,23 +129,23 @@ jobs:
         if: inputs.action == 'firewall'
         working-directory: ansible
         run: |
-          flock -w 3600 "$HOME/.ansible/ci.lock" ansible-playbook playbooks/firewall.yml -l '${{ steps.hosts.outputs.hosts }}:!runner'
+          ansible-playbook playbooks/firewall.yml -l '${{ steps.hosts.outputs.hosts }}:!runner'
 
       - name: Configure Proxmox metric server
         if: inputs.action == 'proxmox-metrics'
         working-directory: ansible
         run: |
-          flock -w 3600 "$HOME/.ansible/ci.lock" ansible-playbook playbooks/proxmox-metrics.yml -l proxmox
+          ansible-playbook playbooks/proxmox-metrics.yml -l proxmox
 
       - name: Run restart
         if: inputs.action == 'restart'
         working-directory: ansible
         run: |
-          flock -w 3600 "$HOME/.ansible/ci.lock" ansible-playbook playbooks/restart-service.yml -l ${{ steps.hosts.outputs.hosts }}
+          ansible-playbook playbooks/restart-service.yml -l ${{ steps.hosts.outputs.hosts }}
 
       - name: Post-deploy status
         if: inputs.action == 'deploy'
         working-directory: ansible
         run: |
           echo "=== Post-deployment status ==="
-          flock -w 3600 "$HOME/.ansible/ci.lock" ansible-playbook playbooks/status.yml -l ${{ steps.hosts.outputs.hosts }}
+          ansible-playbook playbooks/status.yml -l ${{ steps.hosts.outputs.hosts }}
