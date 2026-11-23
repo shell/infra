@@ -1,5 +1,5 @@
 repos:
-  - repo: <https://github.com/gitleaks/gitleaks>
+  - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.1
     hooks:
       - id: gitleaks
@@ -9,4 +9,6 @@ repos:
         name: SOPS files must be encrypted
         language: system
         files: '(\.env\.enc|\.secret\.(ya?ml|json)|\.tfvars\.enc|ca_key\.enc|config\.acl\.enc|dell-optiplex/secrets\.yaml)$'
-        entry: bash -c 'for f in "$@"; do grep -q "sops" "$f" || { echo "NOT ENCRYPTED: $f"; exit 1; }; done' --
+        # Block scalar: the ": " in the echo would otherwise break YAML parsing
+        entry: >-
+          bash -c 'for f in "$@"; do grep -q "sops" "$f" || { echo "NOT ENCRYPTED: $f"; exit 1; }; done' --
