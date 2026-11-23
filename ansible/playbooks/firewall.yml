@@ -22,7 +22,7 @@
 
 - name: Host firewall (UFW)
   hosts: docker_hosts
-  become: yes
+  become: true
 
   tasks:
     - name: Turn UFW off (firewall_enabled is false)

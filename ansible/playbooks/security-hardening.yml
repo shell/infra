@@ -8,7 +8,7 @@
 
 - name: Security hardening for Docker hosts
   hosts: docker_hosts
-  become: yes
+  become: true
 
   tasks:
     # ============================================================

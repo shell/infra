@@ -8,7 +8,7 @@
 
 - name: Configure SSH Certificate Authority trust
   hosts: all
-  become: yes
+  become: true
   vars:
     ca_public_key_src: "{{ playbook_dir }}/../ssh-ca/ca_key.pub"
     ca_public_key_dest: /etc/ssh/ca_user_key.pub
@@ -18,7 +18,7 @@
       ansible.builtin.stat:
         path: "{{ ca_public_key_src }}"
       delegate_to: localhost
-      become: no
+      become: false
       register: ca_key_stat
 
     - name: Fail if CA public key not found

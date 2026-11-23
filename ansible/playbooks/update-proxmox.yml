@@ -8,7 +8,7 @@
 
 - name: Update Proxmox hosts
   hosts: proxmox
-  become: no
+  become: false
   serial: 1
 
   tasks:

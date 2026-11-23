@@ -8,8 +8,8 @@
 
 - name: Proxmox storage and hardware health check
   hosts: proxmox
-  become: no
-  gather_facts: no
+  become: false
+  gather_facts: false
 
   tasks:
     - name: Skip offline hosts

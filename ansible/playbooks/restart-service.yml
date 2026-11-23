@@ -7,7 +7,7 @@
 
 - name: Restart Docker services
   hosts: docker_hosts
-  become: no
+  become: false
   vars:
     base_path: "/home/{{ ansible_user }}"
 

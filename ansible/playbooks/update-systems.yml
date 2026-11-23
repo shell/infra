@@ -9,7 +9,7 @@
 
 - name: Update systems with rolling reboots
   hosts: docker_hosts
-  become: yes
+  become: true
   serial: 1
 
   tasks:
@@ -52,7 +52,7 @@
         cd "{{ base_path }}/{{ item }}"
         docker compose down
       loop: "{{ docker_compose_dirs }}"
-      become: no
+      become: false
       when: reboot_required.stat.exists
 
     - name: Reboot the system
@@ -74,7 +74,7 @@
       retries: 30
       delay: 5
       changed_when: false
-      become: no
+      become: false
       when: reboot_required.stat.exists
 
     - name: Start docker compose stacks after reboot
@@ -82,7 +82,7 @@
         cd "{{ base_path }}/{{ item }}"
         docker compose up -d
       loop: "{{ docker_compose_dirs }}"
-      become: no
+      become: false
       when: reboot_required.stat.exists
 
     - name: Wait for containers to stabilize
@@ -103,7 +103,7 @@
         fi
         docker ps --format "table {{ '{{' }}.Names{{ '}}' }}\t{{ '{{' }}.Status{{ '}}' }}" | head -20
       register: container_check
-      become: no
+      become: false
       when: reboot_required.stat.exists
       changed_when: false
 
@@ -124,5 +124,5 @@
             Reboot: {{ 'yes' if reboot_required.stat.exists else 'no' }}
           parse_mode: HTML
         status_code: 200
-      become: no
+      become: false
       when: notify_telegram | default(false) | bool

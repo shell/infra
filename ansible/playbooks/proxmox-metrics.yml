@@ -14,8 +14,8 @@
 
 - name: Proxmox metric server (InfluxDB)
   hosts: proxmox
-  become: no
-  gather_facts: no
+  become: false
+  gather_facts: false
   vars:
     repo_root: "{{ playbook_dir }}/../.."
     pm_id: monitor-server

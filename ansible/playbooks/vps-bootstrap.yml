@@ -7,7 +7,7 @@
 
 - name: Bootstrap fresh VPS
   hosts: vps_hosts
-  become: no  # already root
+  become: false  # already root
   gather_facts: yes
 
   tasks:

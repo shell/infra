@@ -8,7 +8,7 @@
 
 - name: Deploy Docker Compose services to VPS
   hosts: vps_hosts
-  become: no
+  become: false
   vars:
     base_path: "/home/{{ ansible_user }}"
     repo_cloud_path: "{{ playbook_dir }}/../../cloud/hostinger"
@@ -127,7 +127,7 @@
         - storage/web
         - tmp/web-crontabs
         - tmp/web-load-test
-      become: yes
+      become: true
       when: "'jitsi' in deploy_dirs"
 
     # ============================================================

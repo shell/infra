@@ -7,7 +7,7 @@
 
 - name: Install Docker on VPS hosts
   hosts: vps_hosts
-  become: yes
+  become: true
 
   tasks:
     # ============================================================

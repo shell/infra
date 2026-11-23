@@ -7,7 +7,7 @@
 
 - name: Install Docker on Docker hosts
   hosts: docker_hosts
-  become: yes
+  become: true
 
   tasks:
     # ============================================================

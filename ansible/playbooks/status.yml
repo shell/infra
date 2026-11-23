@@ -6,8 +6,8 @@
 
 - name: Check Docker service status
   hosts: docker_hosts
-  become: no  # Docker commands work without sudo if user is in docker group
-  gather_facts: no
+  become: false  # Docker commands work without sudo if user is in docker group
+  gather_facts: false
 
   tasks:
     - name: Get running containers

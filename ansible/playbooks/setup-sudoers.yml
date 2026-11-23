@@ -6,7 +6,7 @@
 
 - name: Setup passwordless sudo for ansible user
   hosts: docker_hosts
-  become: yes
+  become: true
 
   tasks:
     - name: Add passwordless sudo for {{ ansible_user }}

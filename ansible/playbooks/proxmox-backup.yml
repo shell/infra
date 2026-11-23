@@ -15,8 +15,8 @@
 
 - name: Configure Proxmox VM backups to PBS
   hosts: proxmox
-  become: no
-  gather_facts: no
+  become: false
+  gather_facts: false
   vars:
     pb: "{{ proxmox_backup }}"
     repo_root: "{{ playbook_dir }}/../.."
