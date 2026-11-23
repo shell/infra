@@ -12,7 +12,6 @@ on:
           - all
           - ts-router
           - servarr
-          - tools
           - monitor
           - runner
           - pve-nuc
@@ -29,25 +28,15 @@ on:
           - proxmox-backup
           - proxmox-metrics
           - firewall
+      service:
+        description: 'deploy only: one compose dir (e.g. grafana); empty = all'
+        required: false
+        default: ''
+        type: string
 
 jobs:
-  validate:
-    name: Validate before deploy
-    runs-on: docker
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install yamllint
-        run: apt-get update -qq && apt-get install -y -qq yamllint
-
-      - name: Quick validation
-        run: |
-          yamllint -d "{extends: relaxed, rules: {line-length: disable, truthy: disable}}" \
-            cluster/ --no-warnings
-
   deploy:
     name: ${{ inputs.action }} → ${{ inputs.target }}
-    needs: validate
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
@@ -56,6 +45,9 @@ jobs:
         run: |
           echo "🎯 Target: ${{ inputs.target }}"
           echo "⚡ Action: ${{ inputs.action }}"
+          echo "📦 Service: ${SERVICE:-all}"
+        env:
+          SERVICE: ${{ inputs.service }}
 
       - name: Verify SOPS key exists
         run: |
@@ -65,15 +57,38 @@ jobs:
             exit 1
           fi
 
+      - name: Quick validation
+        run: |
+          yamllint -d "{extends: relaxed, rules: {line-length: disable, truthy: disable}}" \
+            cluster/ --no-warnings
+
+      # Skips Galaxy entirely unless requirements.yml changed since the last install.
+      # galaxy.lock: Validate runs this too, and two installs into the same
+      # ~/.ansible/collections at once can leave it half-written.
       - name: Install Ansible collections
         working-directory: ansible
-        run: ansible-galaxy collection install -r requirements.yml
+        run: |
+          mkdir -p "$HOME/.ansible/collections"
+          exec 9>"$HOME/.ansible/galaxy.lock"
+          flock -w 600 9
+          stamp="$HOME/.ansible/collections/.requirements.sha256"
+          want=$(sha256sum requirements.yml | cut -d' ' -f1)
+          if [ "$(cat "$stamp" 2>/dev/null)" = "$want" ]; then
+            echo "Collections up to date (requirements.yml unchanged)"
+          else
+            ansible-galaxy collection install -r requirements.yml
+            mkdir -p "$(dirname "$stamp")" && echo "$want" > "$stamp"
+          fi
 
+      # `all` skips hosts in the maybe_offline group (inventory/hosts.yml);
+      # pick the host explicitly to target one of them.
+      # Every ansible-playbook below takes ci.lock: runner capacity is > 1, and
+      # this keeps Deploy and Maintenance from touching the same hosts at once.
       - name: Set target hosts
         id: hosts
         run: |
           if [ "${{ inputs.target }}" = "all" ]; then
-            echo "hosts=docker_hosts:monitored" >> $GITHUB_OUTPUT
+            echo "hosts=docker_hosts:monitored:!maybe_offline" >> $GITHUB_OUTPUT
           else
             echo "hosts=${{ inputs.target }}" >> $GITHUB_OUTPUT
           fi
@@ -82,15 +97,23 @@ jobs:
         if: inputs.action == 'status'
         working-directory: ansible
         run: |
-          ansible-playbook playbooks/status.yml -l ${{ steps.hosts.outputs.hosts }}
+          flock -w 3600 "$HOME/.ansible/ci.lock" ansible-playbook playbooks/status.yml -l ${{ steps.hosts.outputs.hosts }}
 
       # Deploying `runner` restarts Forgejo mid-job; the runner reconnects and
       # finishes, but the UI may show the job as failed — check the next status run.
+      # SERVICE goes through env, not ${{ }} in the script, so the free-text
+      # input can't inject shell. The playbook rejects names no host has.
       - name: Run deployment
         if: inputs.action == 'deploy'
         working-directory: ansible
+        env:
+          SERVICE: ${{ inputs.service }}
         run: |
-          ansible-playbook playbooks/deploy.yml -l ${{ steps.hosts.outputs.hosts }}
+          if [ -n "$SERVICE" ]; then
+            flock -w 3600 "$HOME/.ansible/ci.lock" ansible-playbook playbooks/deploy.yml -l ${{ steps.hosts.outputs.hosts }} -e "service=$SERVICE"
+          else
+            flock -w 3600 "$HOME/.ansible/ci.lock" ansible-playbook playbooks/deploy.yml -l ${{ steps.hosts.outputs.hosts }}
+          fi
 
       - name: Provision monitoring agents
         if: inputs.action == 'monitoring'
@@ -99,13 +122,13 @@ jobs:
         # token) as a header to github.com, and it ends up in target journald.
         # Release downloads don't need it.
         run: |
-          env -u GITHUB_TOKEN ansible-playbook playbooks/monitoring.yml -l ${{ steps.hosts.outputs.hosts }}
+          env -u GITHUB_TOKEN flock -w 3600 "$HOME/.ansible/ci.lock" ansible-playbook playbooks/monitoring.yml -l ${{ steps.hosts.outputs.hosts }}
 
       - name: Configure Proxmox backups
         if: inputs.action == 'proxmox-backup'
         working-directory: ansible
         run: |
-          ansible-playbook playbooks/proxmox-backup.yml -l proxmox
+          flock -w 3600 "$HOME/.ansible/ci.lock" ansible-playbook playbooks/proxmox-backup.yml -l proxmox
 
       # UFW for host + Docker-published ports. Never run against `runner` from
       # here: a mistake there cuts off the very runner executing the job.
@@ -113,23 +136,23 @@ jobs:
         if: inputs.action == 'firewall'
         working-directory: ansible
         run: |
-          ansible-playbook playbooks/firewall.yml -l '${{ steps.hosts.outputs.hosts }}:!runner'
+          flock -w 3600 "$HOME/.ansible/ci.lock" ansible-playbook playbooks/firewall.yml -l '${{ steps.hosts.outputs.hosts }}:!runner'
 
       - name: Configure Proxmox metric server
         if: inputs.action == 'proxmox-metrics'
         working-directory: ansible
         run: |
-          ansible-playbook playbooks/proxmox-metrics.yml -l proxmox
+          flock -w 3600 "$HOME/.ansible/ci.lock" ansible-playbook playbooks/proxmox-metrics.yml -l proxmox
 
       - name: Run restart
         if: inputs.action == 'restart'
         working-directory: ansible
         run: |
-          ansible-playbook playbooks/restart-service.yml -l ${{ steps.hosts.outputs.hosts }}
+          flock -w 3600 "$HOME/.ansible/ci.lock" ansible-playbook playbooks/restart-service.yml -l ${{ steps.hosts.outputs.hosts }}
 
       - name: Post-deploy status
         if: inputs.action == 'deploy'
         working-directory: ansible
         run: |
           echo "=== Post-deployment status ==="
-          ansible-playbook playbooks/status.yml -l ${{ steps.hosts.outputs.hosts }}
+          flock -w 3600 "$HOME/.ansible/ci.lock" ansible-playbook playbooks/status.yml -l ${{ steps.hosts.outputs.hosts }}

@@ -16,7 +16,7 @@
 
 - name: Forgejo Actions runner
   hosts: runner
-  become: no
+  become: false
   vars:
     forgejo_runner_version: "13.2.1"
     # sha256 of forgejo-runner-<version>-linux-amd64 (release .sha256 asset)
@@ -54,7 +54,7 @@
       loop: "{{ runner_apt_repos }}"
       loop_control:
         label: "{{ item.name }}"
-      become: yes
+      become: true
 
     - name: Configure apt repos
       ansible.builtin.copy:
@@ -65,14 +65,14 @@
       loop_control:
         label: "{{ item.name }}"
       register: runner_apt_lists
-      become: yes
+      become: true
 
     # Superseded by /etc/apt/keyrings/hashicorp.asc (from the hand install)
     - name: Remove old HashiCorp keyring
       ansible.builtin.file:
         path: /usr/share/keyrings/hashicorp-archive-keyring.gpg
         state: absent
-      become: yes
+      become: true
 
     - name: Install terraform, 1Password CLI and age
       ansible.builtin.apt:
@@ -82,9 +82,15 @@
           - age
         state: present
         update_cache: "{{ runner_apt_lists is changed }}"
-      become: yes
+      become: true
       # --check doesn't really add the repos, so new packages can't resolve yet
       ignore_errors: "{{ ansible_check_mode }}"
+
+    - name: Install CI tools
+      ansible.builtin.apt:
+        name: [yamllint]
+        state: present
+      become: true
 
     - name: Install sops binary
       ansible.builtin.get_url:
@@ -92,7 +98,7 @@
         dest: /usr/local/bin/sops
         checksum: "sha256:{{ sops_sha256 }}"
         mode: '0755'
-      become: yes
+      become: true
 
     # --- Runner -----------------------------------------------------------
     # Decrypted on the runner VM itself (it holds the age key), with the
@@ -160,7 +166,7 @@
         dest: /usr/local/bin/forgejo-runner
         checksum: "sha256:{{ forgejo_runner_sha256 }}"
         mode: '0755'
-      become: yes
+      become: true
       notify: Restart forgejo-runner
 
     - name: Write runner config
@@ -176,7 +182,7 @@
         src: forgejo-runner.service.j2
         dest: /etc/systemd/system/forgejo-runner.service
         mode: '0644'
-      become: yes
+      become: true
       notify: Restart forgejo-runner
 
     - name: Enable and start forgejo-runner
@@ -185,7 +191,7 @@
         enabled: yes
         state: started
         daemon_reload: yes
-      become: yes
+      become: true
 
   handlers:
     - name: Restart forgejo-runner
@@ -193,4 +199,4 @@
         name: forgejo-runner
         state: restarted
         daemon_reload: yes
-      become: yes
+      become: true

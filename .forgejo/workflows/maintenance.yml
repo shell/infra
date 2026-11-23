@@ -17,12 +17,18 @@ on:
           - proxmox-health
           - update-systems
           - update-proxmox
+          - update-service
           - security-hardening
       notify:
         description: 'Send the Telegram summary/alert'
         required: false
         default: false
         type: boolean
+      service:
+        description: 'update-service only: one compose dir (e.g. immich); empty = all'
+        required: false
+        default: ''
+        type: string
 
 jobs:
   maintenance:
@@ -34,8 +40,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # SERVICE goes through env, not ${{ }} in the script, so the free-text
+      # input can't inject shell. ci.lock serializes ansible runs on the runner
+      # (capacity > 1), so Deploy and Maintenance never hit the same hosts at once.
       - name: Run selected playbook
         working-directory: ansible
+        env:
+          SERVICE: ${{ inputs.service }}
         run: |
           echo "### Running ${{ inputs.playbook }} (notify: ${{ inputs.notify }})"
-          ansible-playbook playbooks/${{ inputs.playbook }}.yml -e notify_telegram=${{ inputs.notify }}
+          set -- -e notify_telegram=${{ inputs.notify }}
+          if [ "${{ inputs.playbook }}" = "update-service" ]; then
+            # Skip hosts that are powered off now and then (inventory maybe_offline)
+            set -- "$@" -l 'all:!maybe_offline'
+            if [ -n "$SERVICE" ]; then set -- "$@" -e "service=$SERVICE"; fi
+          fi
+          flock -w 3600 "$HOME/.ansible/ci.lock" \
+            ansible-playbook playbooks/${{ inputs.playbook }}.yml "$@"

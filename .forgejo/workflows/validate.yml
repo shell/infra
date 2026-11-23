@@ -69,9 +69,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Skips Galaxy entirely unless requirements.yml changed since the last install.
+      # galaxy.lock: Deploy runs this too, and two installs into the same
+      # ~/.ansible/collections at once can leave it half-written.
       - name: Install Ansible collections
         working-directory: ansible
-        run: ansible-galaxy collection install -r requirements.yml
+        run: |
+          mkdir -p "$HOME/.ansible/collections"
+          exec 9>"$HOME/.ansible/galaxy.lock"
+          flock -w 600 9
+          stamp="$HOME/.ansible/collections/.requirements.sha256"
+          want=$(sha256sum requirements.yml | cut -d' ' -f1)
+          if [ "$(cat "$stamp" 2>/dev/null)" = "$want" ]; then
+            echo "Collections up to date (requirements.yml unchanged)"
+          else
+            ansible-galaxy collection install -r requirements.yml
+            mkdir -p "$(dirname "$stamp")" && echo "$want" > "$stamp"
+          fi
 
       - name: Validate Ansible syntax
         working-directory: ansible
@@ -90,12 +104,25 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Tarball cached on the runner's cache server (cache.enabled in
+      # forgejo-runner.config.yml.j2). The sha256 check runs on cache hits
+      # too, so a poisoned cache entry fails the job instead of running.
+      - name: Cache gitleaks tarball
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/gitleaks
+          key: gitleaks-${{ env.GITLEAKS_VERSION }}-${{ env.GITLEAKS_SHA256 }}
+
       - name: Install gitleaks
         run: |
-          curl -sSfL -o /tmp/gitleaks.tgz \
-            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
-          echo "${GITLEAKS_SHA256}  /tmp/gitleaks.tgz" | sha256sum -c -
-          tar -xzf /tmp/gitleaks.tgz -C /usr/local/bin gitleaks
+          tgz="$HOME/.cache/gitleaks/gitleaks.tgz"
+          if ! echo "${GITLEAKS_SHA256}  $tgz" | sha256sum -c - >/dev/null 2>&1; then
+            mkdir -p "$(dirname "$tgz")"
+            curl -sSfL -o "$tgz" \
+              "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          fi
+          echo "${GITLEAKS_SHA256}  $tgz" | sha256sum -c -
+          tar -xzf "$tgz" -C /usr/local/bin gitleaks
 
       - name: Scan full history
         run: gitleaks git --redact --no-banner --exit-code 1 .
