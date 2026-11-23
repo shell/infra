@@ -4,17 +4,42 @@
 # Usage:
 #   Deploy all:        ansible-playbook playbooks/deploy.yml
 #   Deploy one host:   ansible-playbook playbooks/deploy.yml -l ts-router
-#   Deploy one service: ansible-playbook playbooks/deploy.yml -l servarr -e service=servarr
+#   Deploy one service: ansible-playbook playbooks/deploy.yml -e service=grafana
+#                       (a docker_compose_dirs entry; hosts without it are skipped,
+#                       so -l is optional)
 #   With sudo password: ansible-playbook playbooks/deploy.yml -K
 
 - name: Deploy Docker Compose services
   hosts: docker_hosts
-  become: no
+  become: false
+  gather_facts: false
+  strategy: free
   vars:
     base_path: "/home/{{ ansible_user }}"
     repo_cluster_path: "{{ playbook_dir }}/../../cluster"
+    # -e service=<dir> narrows the run to one compose dir; empty = all of them
+    deploy_service: "{{ service | default('') | trim }}"
+    deploy_dirs: "{{ [deploy_service] if deploy_service else docker_compose_dirs }}"
 
   tasks:
+    # Typos would otherwise skip every host and "succeed" doing nothing
+    - name: Check requested service exists on a targeted host
+      ansible.builtin.assert:
+        that: >-
+          deploy_service in (ansible_play_hosts_all
+            | map('extract', hostvars, 'docker_compose_dirs') | flatten)
+        fail_msg: >-
+          service '{{ deploy_service }}' isn't in docker_compose_dirs of any
+          targeted host ({{ ansible_play_hosts_all | join(', ') }})
+        quiet: true
+      when: deploy_service | length > 0
+
+    - name: Skip hosts that don't run the requested service
+      ansible.builtin.meta: end_host
+      when:
+        - deploy_service | length > 0
+        - deploy_service not in docker_compose_dirs
+
     - name: Create Docker networks
       ansible.builtin.shell: |
         docker network inspect {{ item }} >/dev/null 2>&1 || docker network create {{ item }}
@@ -27,7 +52,7 @@
         path: "{{ base_path }}/{{ item }}"
         state: directory
         mode: '0755'
-      loop: "{{ docker_compose_dirs }}"
+      loop: "{{ deploy_dirs }}"
 
     - name: Set source directory (matches inventory hostname)
       ansible.builtin.set_fact:
@@ -42,13 +67,13 @@
           - "--exclude=.env.enc"
           - "--exclude=acme.json"
           - "--exclude=*.secret.yml"
-      loop: "{{ docker_compose_dirs }}"
+      loop: "{{ deploy_dirs }}"
       register: compose_files
 
     - name: Check for encrypted .env files
       ansible.builtin.stat:
         path: "{{ source_base }}/{{ item }}/.env.enc"
-      loop: "{{ docker_compose_dirs }}"
+      loop: "{{ deploy_dirs }}"
       register: env_files
       delegate_to: localhost
 
@@ -73,17 +98,18 @@
 
     - name: Find encrypted secret config files
       ansible.builtin.find:
-        paths: "{{ source_base }}"
+        # Only the dirs being deployed (every secret lives inside a service dir)
+        paths: "{{ deploy_dirs | map('regex_replace', '^', source_base + '/') | list }}"
         patterns: "*.secret.yml"
         recurse: yes
       delegate_to: localhost
       register: secret_yml_files
+      when: deploy_dirs | length > 0
 
     - name: Decrypt secret config files
       ansible.builtin.shell: |
         sops --decrypt "{{ item.path }}"
-      loop: "{{ secret_yml_files.files }}"
-      when: secret_yml_files.files | length > 0
+      loop: "{{ secret_yml_files.files | default([]) }}"
       register: decrypted_secret_yml
       delegate_to: localhost
       changed_when: false
@@ -106,22 +132,20 @@
           - "compose.yaml"
           - "docker-compose.yml"
           - "docker-compose.yaml"
-      loop: "{{ docker_compose_dirs }}"
+      loop: "{{ deploy_dirs }}"
       register: found_compose_files
 
     - name: Deploy services with docker compose
       ansible.builtin.shell: |
         cd "{{ base_path }}/{{ item.item }}"
-        docker compose pull --quiet
-        docker compose down --remove-orphans 2>/dev/null || true
-        docker compose up -d --remove-orphans
+        docker compose up -d --remove-orphans 2>&1
       loop: "{{ found_compose_files.results }}"
       when: item.files | length > 0
       register: deploy_result
-      changed_when: "'Started' in deploy_result.stdout or 'Recreated' in deploy_result.stdout"
+      changed_when: "'Started' in deploy_result.stdout or 'Recreated' in deploy_result.stdout or 'Removed' in deploy_result.stdout"
 
     - name: Ensure configured users have Grafana Admin role
-      when: "'grafana' in docker_compose_dirs"
+      when: "'grafana' in deploy_dirs"
       block:
         - name: Wait for Grafana API to be ready
           ansible.builtin.uri:
@@ -184,8 +208,3 @@
               role: Admin
             status_code: 200
           loop: "{{ grafana_org_users.json | selectattr('login', 'in', grafana_admin_users | default([])) | selectattr('role', 'ne', 'Admin') | list }}"
-
-# Monitoring agents (beszel-agent, node-exporter) are managed by a role,
-# not per-host compose dirs.
-- name: Provision monitoring agents
-  ansible.builtin.import_playbook: monitoring.yml

@@ -71,7 +71,7 @@ ansible-playbook playbooks/restart-service.yml -l ts-router -e service=traefik
 
 ### Monitoring Agents
 
-`playbooks/monitoring.yml` installs the monitoring agents as **native systemd services** (no Docker needed) on every host in the `monitored` group, and regenerates Prometheus scrape targets on `monitor`. It also runs at the end of `deploy.yml`, and from GitHub Actions via **Deploy → action: monitoring**.
+`playbooks/monitoring.yml` installs the monitoring agents as **native systemd services** (no Docker needed) on every host in the `monitored` group, and regenerates Prometheus scrape targets on `monitor`. It does **not** run as part of `deploy.yml`: run it from Forgejo Actions via **Deploy → action: monitoring** (or `ansible-playbook playbooks/monitoring.yml -l <host>`), e.g. after adding a new host.
 
 | Agent | Installed by (Galaxy) | Notes |
 |-------|----------------------|-------|
