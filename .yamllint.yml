@@ -1,0 +1,5 @@
+# Used by Validate and Deploy (yamllint picks this up from the repo root)
+extends: relaxed
+rules:
+  line-length: disable
+  truthy: disable

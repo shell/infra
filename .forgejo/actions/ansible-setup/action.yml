@@ -1,0 +1,41 @@
+name: Ansible setup
+description: >-
+  Shared setup for every workflow that runs ansible-playbook on the runner host:
+  optional SOPS age key check, then the collections install (ansible.cfg enables
+  ansible.posix callbacks, so even syntax checks need the collections).
+
+inputs:
+  sops:
+    description: "'true' = fail early unless the SOPS age key is on the runner"
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Verify SOPS key exists
+      shell: bash
+      env:
+        NEED_SOPS: ${{ inputs.sops }}
+      run: |
+        [ "$NEED_SOPS" = true ] || exit 0
+        if [ ! -f "$HOME/.config/sops/age/keys.txt" ]; then
+          echo "ERROR: SOPS age key not found at ~/.config/sops/age/keys.txt"
+          echo "Please ensure the runner host has the age key configured."
+          exit 1
+        fi
+
+    # Skips Galaxy entirely unless requirements.yml changed since the last install.
+    # Shared ~/.ansible/collections is safe only because runner capacity is 1.
+    - name: Install Ansible collections
+      shell: bash
+      working-directory: ${{ github.workspace }}/ansible
+      run: |
+        stamp="$HOME/.ansible/collections/.requirements.sha256"
+        want=$(sha256sum requirements.yml | cut -d' ' -f1)
+        if [ "$(cat "$stamp" 2>/dev/null)" = "$want" ]; then
+          echo "Collections up to date (requirements.yml unchanged)"
+        else
+          ansible-galaxy collection install -r requirements.yml
+          mkdir -p "$(dirname "$stamp")" && echo "$want" > "$stamp"
+        fi

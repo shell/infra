@@ -71,7 +71,7 @@ ansible-playbook playbooks/restart-service.yml -l ts-router -e service=traefik
 
 ### Monitoring Agents
 
-`playbooks/monitoring.yml` installs the monitoring agents as **native systemd services** (no Docker needed) on every host in the `monitored` group, and regenerates Prometheus scrape targets on `monitor`. It does **not** run as part of `deploy.yml`: run it from Forgejo Actions via **Deploy → action: monitoring** (or `ansible-playbook playbooks/monitoring.yml -l <host>`), e.g. after adding a new host.
+`playbooks/monitoring.yml` installs the monitoring agents as **native systemd services** (no Docker needed) on every host in the `monitored` group, and regenerates Prometheus scrape targets on `monitor`. It does **not** run as part of `deploy.yml`: run it from Forgejo Actions via **Provision → playbook: monitoring** (or `ansible-playbook playbooks/monitoring.yml -l <host>`), e.g. after adding a new host.
 
 | Agent | Installed by (Galaxy) | Notes |
 |-------|----------------------|-------|
@@ -111,9 +111,9 @@ Shared agent secrets: `sops secrets/monitoring.secret.yml`.
 | `update-systems.yml` | apt upgrade + rolling reboot for Docker VMs |
 | `update-proxmox.yml` | Proxmox host updates + reboot notification |
 | `proxmox-backup.yml` | PBS storage, nightly VM backup job, data-disk exclusions, Telegram failure alert (see `docs/proxmox-backup.md`) |
-| `proxmox-metrics.yml` | PVE metric server → InfluxDB on monitor (token from `cluster/monitor/influxdb/.env.enc`); Grafana dashboard `proxmox-flux`. Forgejo: **Deploy → action: proxmox-metrics** |
+| `proxmox-metrics.yml` | PVE metric server → InfluxDB on monitor (token from `cluster/monitor/influxdb/.env.enc`); Grafana dashboard `proxmox-flux`. Forgejo: **Provision → playbook: proxmox-metrics** |
 | `security-hardening.yml` | SSH hardening, fail2ban, unattended-upgrades, then imports `firewall.yml` |
-| `firewall.yml` | Declarative UFW, default-deny for host **and** Docker-published ports (`DOCKER-USER` hook in `after.rules`). Rules in `firewall_common_rules` / host_vars `firewall_rules`; Forgejo **Deploy → action: firewall** |
+| `firewall.yml` | Declarative UFW, default-deny for host **and** Docker-published ports (`DOCKER-USER` hook in `after.rules`). Rules in `firewall_common_rules` / host_vars `firewall_rules`; Forgejo **Provision → playbook: firewall** |
 
 ```bash
 cd ansible

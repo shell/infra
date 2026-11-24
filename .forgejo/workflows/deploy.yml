@@ -1,5 +1,7 @@
 name: Deploy
 
+# Docker Compose stacks on docker_hosts. Host configuration (monitoring agents,
+# firewall, Proxmox backup/metrics) lives in provision.yml.
 on:
   workflow_dispatch:
     inputs:
@@ -14,7 +16,6 @@ on:
           - servarr
           - monitor
           - runner
-          - pve-nuc
       action:
         description: 'Action to perform'
         required: true
@@ -24,12 +25,8 @@ on:
           - deploy
           - status
           - restart
-          - monitoring
-          - proxmox-backup
-          - proxmox-metrics
-          - firewall
       service:
-        description: 'deploy only: one compose dir (e.g. grafana); empty = all'
+        description: 'deploy/restart only: one compose dir (e.g. grafana); empty = all'
         required: false
         default: ''
         type: string
@@ -41,111 +38,63 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Show parameters
-        run: |
-          echo "🎯 Target: ${{ inputs.target }}"
-          echo "⚡ Action: ${{ inputs.action }}"
-          echo "📦 Service: ${SERVICE:-all}"
-        env:
-          SERVICE: ${{ inputs.service }}
-
-      - name: Verify SOPS key exists
-        run: |
-          if [ ! -f "$HOME/.config/sops/age/keys.txt" ]; then
-            echo "ERROR: SOPS age key not found at ~/.config/sops/age/keys.txt"
-            echo "Please ensure the runner host has the age key configured."
-            exit 1
-          fi
+      - uses: ./.forgejo/actions/ansible-setup
+        with:
+          sops: 'true'
 
       - name: Quick validation
-        run: |
-          yamllint -d "{extends: relaxed, rules: {line-length: disable, truthy: disable}}" \
-            cluster/ --no-warnings
+        run: yamllint --no-warnings cluster/
 
-      # Skips Galaxy entirely unless requirements.yml changed since the last install.
-      - name: Install Ansible collections
-        working-directory: ansible
+      # Maps action → playbook and target → host limit, and rejects input that
+      # would be silently ignored. `all` skips hosts in the maybe_offline group
+      # (inventory/hosts.yml); pick the host explicitly to target one of them.
+      - name: Resolve playbook and hosts
+        id: plan
+        env:
+          TARGET: ${{ inputs.target }}
+          ACTION: ${{ inputs.action }}
+          SERVICE: ${{ inputs.service }}
         run: |
-          stamp="$HOME/.ansible/collections/.requirements.sha256"
-          want=$(sha256sum requirements.yml | cut -d' ' -f1)
-          if [ "$(cat "$stamp" 2>/dev/null)" = "$want" ]; then
-            echo "Collections up to date (requirements.yml unchanged)"
-          else
-            ansible-galaxy collection install -r requirements.yml
-            mkdir -p "$(dirname "$stamp")" && echo "$want" > "$stamp"
-          fi
-
-      # `all` skips hosts in the maybe_offline group (inventory/hosts.yml);
-      # pick the host explicitly to target one of them.
-      - name: Set target hosts
-        id: hosts
-        run: |
-          if [ "${{ inputs.target }}" = "all" ]; then
-            echo "hosts=docker_hosts:monitored:!maybe_offline" >> $GITHUB_OUTPUT
-          else
-            echo "hosts=${{ inputs.target }}" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Run status check
-        if: inputs.action == 'status'
-        working-directory: ansible
-        run: |
-          ansible-playbook playbooks/status.yml -l ${{ steps.hosts.outputs.hosts }}
+          fail() { echo "::error::$*"; exit 1; }
+          case "$ACTION" in
+            deploy)  playbook=deploy ;;
+            restart) playbook=restart-service ;;
+            status)  playbook=status
+                     [ -z "$SERVICE" ] || fail "service is only used by deploy and restart" ;;
+            *)       fail "unknown action: $ACTION" ;;
+          esac
+          case "$TARGET" in
+            all) limit='docker_hosts:!maybe_offline' ;;
+            *)   limit=$TARGET ;;
+          esac
+          echo "🎯 Target: $TARGET → -l $limit"
+          echo "⚡ Action: $ACTION → playbooks/$playbook.yml"
+          echo "📦 Service: ${SERVICE:-all}"
+          echo "playbook=$playbook" >> "$GITHUB_OUTPUT"
+          echo "limit=$limit" >> "$GITHUB_OUTPUT"
 
       # Deploying `runner` restarts Forgejo mid-job; the runner reconnects and
       # finishes, but the UI may show the job as failed — check the next status run.
-      # SERVICE goes through env, not ${{ }} in the script, so the free-text
-      # input can't inject shell. The playbook rejects names no host has.
-      - name: Run deployment
-        if: inputs.action == 'deploy'
+      # Inputs go through env, not ${{ }} in the script, so the free-text service
+      # can't inject shell. deploy.yml rejects names no host has. service is only
+      # passed when set: restart-service.yml treats a defined-but-empty service as
+      # a dir name and would restart in the home directory.
+      - name: Run ${{ inputs.action }}
         working-directory: ansible
         env:
+          PLAYBOOK: ${{ steps.plan.outputs.playbook }}
+          LIMIT: ${{ steps.plan.outputs.limit }}
           SERVICE: ${{ inputs.service }}
         run: |
-          if [ -n "$SERVICE" ]; then
-            ansible-playbook playbooks/deploy.yml -l ${{ steps.hosts.outputs.hosts }} -e "service=$SERVICE"
-          else
-            ansible-playbook playbooks/deploy.yml -l ${{ steps.hosts.outputs.hosts }}
-          fi
-
-      - name: Provision monitoring agents
-        if: inputs.action == 'monitoring'
-        working-directory: ansible
-        # prometheus.prometheus roles send $GITHUB_TOKEN (here: the Forgejo job
-        # token) as a header to github.com, and it ends up in target journald.
-        # Release downloads don't need it.
-        run: |
-          env -u GITHUB_TOKEN ansible-playbook playbooks/monitoring.yml -l ${{ steps.hosts.outputs.hosts }}
-
-      - name: Configure Proxmox backups
-        if: inputs.action == 'proxmox-backup'
-        working-directory: ansible
-        run: |
-          ansible-playbook playbooks/proxmox-backup.yml -l proxmox
-
-      # UFW for host + Docker-published ports. Never run against `runner` from
-      # here: a mistake there cuts off the very runner executing the job.
-      - name: Apply host firewall
-        if: inputs.action == 'firewall'
-        working-directory: ansible
-        run: |
-          ansible-playbook playbooks/firewall.yml -l '${{ steps.hosts.outputs.hosts }}:!runner'
-
-      - name: Configure Proxmox metric server
-        if: inputs.action == 'proxmox-metrics'
-        working-directory: ansible
-        run: |
-          ansible-playbook playbooks/proxmox-metrics.yml -l proxmox
-
-      - name: Run restart
-        if: inputs.action == 'restart'
-        working-directory: ansible
-        run: |
-          ansible-playbook playbooks/restart-service.yml -l ${{ steps.hosts.outputs.hosts }}
+          set -- -l "$LIMIT"
+          if [ -n "$SERVICE" ]; then set -- "$@" -e "service=$SERVICE"; fi
+          ansible-playbook "playbooks/$PLAYBOOK.yml" "$@"
 
       - name: Post-deploy status
         if: inputs.action == 'deploy'
         working-directory: ansible
+        env:
+          LIMIT: ${{ steps.plan.outputs.limit }}
         run: |
           echo "=== Post-deployment status ==="
-          ansible-playbook playbooks/status.yml -l ${{ steps.hosts.outputs.hosts }}
+          ansible-playbook playbooks/status.yml -l "$LIMIT"

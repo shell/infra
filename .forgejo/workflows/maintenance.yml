@@ -1,8 +1,14 @@
 name: Maintenance
 
-# Manual runs. Scheduled runs live in maintenance-weekly.yml / maintenance-daily.yml
-# (one cron per file: Forgejo doesn't reliably expose which schedule fired).
+# One workflow for manual and scheduled maintenance.
+# A single daily cron; the job picks the weekly set by weekday instead of by
+# which cron fired (Forgejo doesn't reliably expose github.event.schedule).
+#   daily:          proxmox-health
+#   weekly (Sunday): docker-cleanup, host-cleanup, then proxmox-health
+# 08:00 UTC = 3-4am Eastern / 0-1am Pacific, so Sunday in UTC is Sunday in the US.
 on:
+  schedule:
+    - cron: "0 8 * * *"
   workflow_dispatch:
     inputs:
       playbook:
@@ -19,6 +25,11 @@ on:
           - update-proxmox
           - update-service
           - security-hardening
+      limit:
+        description: 'Ansible host limit (e.g. servarr or servarr,monitor); empty = playbook default'
+        required: false
+        default: ''
+        type: string
       notify:
         description: 'Send the Telegram summary/alert'
         required: false
@@ -32,7 +43,7 @@ on:
 
 jobs:
   maintenance:
-    name: ${{ inputs.playbook }}
+    name: ${{ github.event_name == 'schedule' && 'Scheduled maintenance' || inputs.playbook }}${{ inputs.limit && format(' → {0}', inputs.limit) || '' }}
     runs-on: self-hosted
     env:
       SF_TELEGRAM_BOT_TOKEN: ${{ secrets.SF_TELEGRAM_BOT_TOKEN }}
@@ -40,18 +51,66 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # SERVICE goes through env, not ${{ }} in the script, so the free-text
-      # input can't inject shell.
-      - name: Run selected playbook
+      - uses: ./.forgejo/actions/ansible-setup
+
+      # Scheduled: daily or weekly set, Telegram on. Manual: the chosen playbook.
+      - name: Resolve playbooks
+        id: plan
+        env:
+          EVENT: ${{ github.event_name }}
+          PLAYBOOK: ${{ inputs.playbook }}
+          NOTIFY: ${{ inputs.notify }}
+        run: |
+          if [ "$EVENT" = schedule ]; then
+            if [ "$(date -u +%u)" = 7 ]; then
+              echo "📅 Sunday: weekly + daily set"
+              playbooks="docker-cleanup host-cleanup proxmox-health"
+            else
+              echo "📅 Daily set"
+              playbooks="proxmox-health"
+            fi
+            notify=true
+          else
+            playbooks=$PLAYBOOK
+            notify=${NOTIFY:-false}
+          fi
+          echo "playbooks=$playbooks" >> "$GITHUB_OUTPUT"
+          echo "notify=$notify" >> "$GITHUB_OUTPUT"
+
+      # Playbooks run one after another; a failure doesn't stop the rest (separate
+      # ansible runs: inside one run, a play whose hosts all fail aborts everything
+      # after it). The step fails at the end if any of them did.
+      # Free-text inputs go through env, not ${{ }} in the script, so they
+      # can't inject shell.
+      - name: Run playbooks
         working-directory: ansible
         env:
+          PLAYBOOKS: ${{ steps.plan.outputs.playbooks }}
+          NOTIFY: ${{ steps.plan.outputs.notify }}
+          LIMIT: ${{ inputs.limit }}
           SERVICE: ${{ inputs.service }}
         run: |
-          echo "### Running ${{ inputs.playbook }} (notify: ${{ inputs.notify }})"
-          set -- -e notify_telegram=${{ inputs.notify }}
-          if [ "${{ inputs.playbook }}" = "update-service" ]; then
-            # Skip hosts that are powered off now and then (inventory maybe_offline)
-            set -- "$@" -l 'all:!maybe_offline'
-            if [ -n "$SERVICE" ]; then set -- "$@" -e "service=$SERVICE"; fi
+          failed=""
+          for playbook in $PLAYBOOKS; do
+            set -- -e "notify_telegram=$NOTIFY"
+            if [ -n "$LIMIT" ]; then
+              # Explicit limit wins, maybe_offline hosts included
+              set -- "$@" -l "$LIMIT"
+            else
+              case "$playbook" in
+                # These probe maybe_offline hosts themselves: cleaned when on, skipped when off
+                docker-cleanup|host-cleanup|maintenance-all) ;;
+                # Everything else would fail as unreachable when a maybe_offline host is off
+                *) set -- "$@" -l 'all:!maybe_offline' ;;
+              esac
+            fi
+            if [ "$playbook" = update-service ] && [ -n "$SERVICE" ]; then
+              set -- "$@" -e "service=$SERVICE"
+            fi
+            echo "### Running $playbook (notify: $NOTIFY, limit: ${LIMIT:-default})"
+            ansible-playbook "playbooks/$playbook.yml" "$@" || failed="$failed $playbook"
+          done
+          if [ -n "$failed" ]; then
+            echo "::error::failed:$failed"
+            exit 1
           fi
-          ansible-playbook playbooks/${{ inputs.playbook }}.yml "$@"

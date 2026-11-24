@@ -1,0 +1,75 @@
+name: Provision
+
+# Host configuration: monitoring agents, firewall, Proxmox backup/metrics.
+# Docker Compose stacks are deployed by deploy.yml.
+on:
+  workflow_dispatch:
+    inputs:
+      playbook:
+        description: 'What to configure'
+        required: true
+        default: 'monitoring'
+        type: choice
+        options:
+          - monitoring
+          - firewall
+          - proxmox-backup
+          - proxmox-metrics
+      target:
+        description: 'Hosts (proxmox-* only take all or pve-nuc)'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - ts-router
+          - servarr
+          - monitor
+          - runner
+          - pve-nuc
+
+jobs:
+  provision:
+    name: ${{ inputs.playbook }} → ${{ inputs.target }}
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.forgejo/actions/ansible-setup
+        with:
+          sops: 'true'
+
+      # Maps playbook + target → host limit, and rejects combinations that would
+      # match no hosts (Ansible only warns, and the job would go green).
+      # `all` skips hosts in the maybe_offline group; pick one explicitly to target it.
+      - name: Resolve hosts
+        id: plan
+        env:
+          TARGET: ${{ inputs.target }}
+          PLAYBOOK: ${{ inputs.playbook }}
+        run: |
+          fail() { echo "::error::$*"; exit 1; }
+          case "$PLAYBOOK:$TARGET" in
+            proxmox-*:all|proxmox-*:pve-nuc) limit=proxmox ;;
+            proxmox-*:*)  fail "$PLAYBOOK only applies to Proxmox hosts: pick target all or pve-nuc" ;;
+            # UFW for host + Docker-published ports. Never against `runner` from
+            # here: a mistake there cuts off the very runner executing the job.
+            firewall:runner)  fail "firewall never runs against runner (it would cut off this job)" ;;
+            firewall:pve-nuc) fail "firewall targets docker_hosts; pve-nuc isn't one" ;;
+            firewall:all)     limit='docker_hosts:!maybe_offline:!runner' ;;
+            monitoring:all)   limit='monitored:!maybe_offline' ;;
+            *:all)            fail "no host limit defined for $PLAYBOOK" ;;
+            *)                limit=$TARGET ;;
+          esac
+          echo "⚙️ $PLAYBOOK → -l $limit"
+          echo "limit=$limit" >> "$GITHUB_OUTPUT"
+
+      # GITHUB_TOKEN is unset because prometheus.prometheus roles (monitoring)
+      # send it (here: the Forgejo job token) as a header to github.com, and it
+      # ends up in target journald. No playbook here needs it.
+      - name: Run ${{ inputs.playbook }}
+        working-directory: ansible
+        env:
+          PLAYBOOK: ${{ inputs.playbook }}
+          LIMIT: ${{ steps.plan.outputs.limit }}
+        run: env -u GITHUB_TOKEN ansible-playbook "playbooks/$PLAYBOOK.yml" -l "$LIMIT"
