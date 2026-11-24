@@ -6,7 +6,6 @@ docker_compose_dirs:
   - traefik
   - jitsi
   - umami
-  - france-guide
   - penk-in
 
 # Docker networks to create before deploying services
@@ -23,7 +22,5 @@ vps_motd_services:
     check: "docker ps --filter 'name=jitsi-web' --format '{% raw %}{{.Status}}{% endraw %}'"
   - name: "Umami"
     check: "docker ps --filter 'name=umami' --format '{% raw %}{{.Status}}{% endraw %}'"
-  - name: "France Guide"
-    check: "docker ps --filter 'name=france-guide' --format '{% raw %}{{.Status}}{% endraw %}'"
   - name: "penk.in preview"
     check: "docker ps --filter 'name=penk-in' --format '{% raw %}{{.Status}}{% endraw %}'"
