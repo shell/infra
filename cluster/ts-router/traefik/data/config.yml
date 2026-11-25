@@ -11,7 +11,7 @@ http:
         - "https"
       rule: "Host(`home.sf.penk.in`)"
       middlewares:
-        - homarr-headers
+        - default-headers
         - https-redirectscheme
       tls: {}
       service: homarr
@@ -515,20 +515,6 @@ http:
         stsPreload: true
         stsSeconds: 15552000
         customFrameOptionsValue: SAMEORIGIN
-        customRequestHeaders:
-          X-Forwarded-Proto: https
-
-    # Same as default-headers, but lets Notion embed the dashboard in an iframe
-    # (no X-Frame-Options; CSP frame-ancestors limits framing to Notion).
-    homarr-headers:
-      headers:
-        browserXssFilter: true
-        contentTypeNosniff: true
-        forceSTSHeader: true
-        stsIncludeSubdomains: true
-        stsPreload: true
-        stsSeconds: 15552000
-        contentSecurityPolicy: "frame-ancestors 'self' https://www.notion.so https://*.notion.so https://app.notion.com https://*.notion.com"
         customRequestHeaders:
           X-Forwarded-Proto: https
 
