@@ -10,6 +10,9 @@ services:
     environment:
       - APP_URL=https://beszel.sf.penk.in
       - HEARTBEAT_URL=${HEARTBEAT_URL}
+      # Let every user (incl. the read-only homarr@ account Homarr logs in as)
+      # see all systems; otherwise they only see systems they're assigned to.
+      - SHARE_ALL_SYSTEMS=true
     volumes:
       - /mnt/data/beszel_data:/beszel_data
       - ./beszel_socket:/beszel_socket
